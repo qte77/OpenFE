@@ -309,7 +309,7 @@ class OpenFE:
 
         self.myprint(f"The number of candidate features is {len(self.candidate_features_list)}")
         self.myprint("Start stage I selection.")
-        self.candidate_features_list = self.stage1_select()
+        self.candidate_features_list = self.stage1_select(n_estimators_eval)
         self.myprint(f"The number of remaining candidate features is {len(self.candidate_features_list)}")
         self.myprint("Start stage II selection.")
         self.new_features_scores_list = self.stage2_select(n_estimators_step_2)
@@ -469,7 +469,7 @@ class OpenFE:
                 warnings.warn("The init_scores for classification should be raw scores instead of probability."
                               " But the init_scores are between 0 and 1.")
 
-    def stage1_select(self, ratio=0.5):
+    def stage1_select(self, n_estimators_eval=100, ratio=0.5):
         if self.is_stage1 is False:
             train_index = _subsample(self.train_index, self.n_data_blocks)[0]
             val_index = _subsample(self.val_index, self.n_data_blocks)[0]
@@ -484,7 +484,7 @@ class OpenFE:
         train_idx = train_index_samples[idx]
         val_idx = val_index_samples[idx]
         idx += 1
-        results = self._calculate_and_evaluate(self.candidate_features_list, train_idx, val_idx, self.n_estimators_eval)
+        results = self._calculate_and_evaluate(self.candidate_features_list, train_idx, val_idx, n_estimators_eval)
         candidate_features_scores = sorted(results, key=lambda x: x[1], reverse=True)
         candidate_features_scores = self.delete_same(candidate_features_scores)
 
