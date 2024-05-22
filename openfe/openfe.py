@@ -484,7 +484,7 @@ class OpenFE:
         train_idx = train_index_samples[idx]
         val_idx = val_index_samples[idx]
         idx += 1
-        results = self._calculate_and_evaluate(self.candidate_features_list, train_idx, val_idx, self.)
+        results = self._calculate_and_evaluate(self.candidate_features_list, train_idx, val_idx, self.n_estimators_eval)
         candidate_features_scores = sorted(results, key=lambda x: x[1], reverse=True)
         candidate_features_scores = self.delete_same(candidate_features_scores)
 
