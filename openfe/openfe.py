@@ -305,9 +305,7 @@ class OpenFE:
         self.categorical_features = self.get_categorical_features(categorical_features)
         self.candidate_features_list = self.get_candidate_features(candidate_features_list)
         self.train_index, self.val_index = self.get_index(train_index, val_index)
-        self.init_scores = self.get_init_score(
-          init_scores, get_init_score, n_estimators_init_score, use_train
-        )
+        self.init_scores = self.get_init_score(init_scores, n_estimators_init_score, use_train)
 
         self.myprint(f"The number of candidate features is {len(self.candidate_features_list)}")
         self.myprint("Start stage I selection.")
