@@ -140,7 +140,8 @@ class OpenFE:
         pass
 
     def fit(self,
-            data: pd.DataFrame, label: pd.DataFrame,
+            data: pd.DataFrame,
+            label: pd.DataFrame,
             task: str = None,
             train_index=None,
             val_index=None,
@@ -159,7 +160,11 @@ class OpenFE:
             tmp_save_path='./openfe_tmp_data_xx.feather',
             n_jobs=1,
             seed=1,
-            verbose=True):
+            verbose=True,
+            n_estimators_init_score=10000,
+            n_estimators_step_2=1000,
+            n_estimators_eval=100
+):
         ''' Generate new features by the algorithm of OpenFE
 
         Parameters
@@ -258,6 +263,10 @@ class OpenFE:
         verbose: bool, optional (default=True)
             Whether to display information.
 
+        n_estimators_init_score: int, optional (default=10000)
+        n_estimators_step_2: int, optional (default=1000)
+        n_estimators_eval: int, optional (default=100)
+
         Returns
         -------
         new_features_list: list
@@ -296,14 +305,16 @@ class OpenFE:
         self.categorical_features = self.get_categorical_features(categorical_features)
         self.candidate_features_list = self.get_candidate_features(candidate_features_list)
         self.train_index, self.val_index = self.get_index(train_index, val_index)
-        self.init_scores = self.get_init_score(init_scores)
+        self.init_scores = self.get_init_score(
+          init_scores, get_init_score, n_estimators_init_score, use_train
+        )
 
         self.myprint(f"The number of candidate features is {len(self.candidate_features_list)}")
         self.myprint("Start stage I selection.")
         self.candidate_features_list = self.stage1_select()
         self.myprint(f"The number of remaining candidate features is {len(self.candidate_features_list)}")
         self.myprint("Start stage II selection.")
-        self.new_features_scores_list = self.stage2_select()
+        self.new_features_scores_list = self.stage2_select(n_estimators_step_2)
         self.new_features_list = [feature for feature, _ in self.new_features_scores_list]
         for node, score in self.new_features_scores_list:
             node.delete()
@@ -398,14 +409,14 @@ class OpenFE:
         except Exception as e:
             raise ValueError(f"Cannot transform data and label into dataframe due to error: {e}")
 
-    def get_init_score(self, init_scores, use_train=False):
+    def get_init_score(self, init_scores, n_estimators_init_score=10000, use_train=False):
         if init_scores is None:
             assert self.task in ["regression", "classification"]
             if self.feature_boosting:
                 data = self.data.copy()
                 label = self.label.copy()
 
-                params = {"n_estimators": 10000, "learning_rate": 0.1, "metric": self.metric,
+                params = {"n_estimators": n_estimators_init_score, "learning_rate": 0.1, "metric": self.metric,
                           "seed": self.seed, "n_jobs": self.n_jobs}
                 if self.task == "regression":
                     gbm = lgb.LGBMRegressor(**params)
@@ -501,7 +512,7 @@ class OpenFE:
             return_results = [item[0] for item in candidate_features_scores[:100]]
         return return_results
 
-    def stage2_select(self):
+    def stage2_select(self, n_estimators_step_2=1000):
         data_new = []
         new_features = []
         self.candidate_features_list = self._calculate(self.candidate_features_list,
@@ -535,7 +546,7 @@ class OpenFE:
         gc.collect()
         self.myprint("Finish data processing.")
         if self.stage2_params is None:
-            params = {"n_estimators": 1000, "importance_type": "gain", "num_leaves": 16,
+            params = {"n_estimators": n_estimators_step_2, "importance_type": "gain", "num_leaves": 16,
                       "seed": 1, "n_jobs": self.n_jobs}
         else:
             params = self.stage2_params
@@ -596,13 +607,17 @@ class OpenFE:
         self.myprint(f"{start_n-end_n} same features have been deleted.")
         return candidate_features_scores
 
-    def _evaluate(self, candidate_feature, train_y, val_y, train_init, val_init, init_metric):
+    def _evaluate(
+      self, candidate_feature,
+      train_y, val_y, train_init, val_init,
+      init_metric, n_estimators_eval=100
+    ):
         try:
             train_x = pd.DataFrame(candidate_feature.data.loc[train_y.index])
             val_x = pd.DataFrame(candidate_feature.data.loc[val_y.index])
             if self.stage1_metric == 'predictive':
-                params = {"n_estimators": 100, "importance_type": "gain", "num_leaves": 16,
-                          "seed": 1, "deterministic": True, "n_jobs": 1}
+                params = {"n_estimators": n_estimators_eval, "importance_type": "gain",
+                          "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1}
                 if self.metric is not None:
                     params.update({"metric": self.metric})
                 if self.task == 'classification':
@@ -702,7 +717,11 @@ class OpenFE:
             init_metric = self.get_init_metric(val_init, val_y)
             for candidate_feature in candidate_features:
                 candidate_feature.calculate(data_temp, is_root=True)
-                score = self._evaluate(candidate_feature, train_y, val_y, train_init, val_init, init_metric)
+                score = self._evaluate(
+                  candidate_feature,
+                  train_y, val_y, train_init, val_init,
+                  init_metric, n_estimators_eval
+                )
                 candidate_feature.delete()
                 results.append([candidate_feature, score])
             return results
