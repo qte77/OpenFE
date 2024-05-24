@@ -277,7 +277,7 @@ class OpenFE:
 
         assert stage2_metric in ['gain_importance', 'permutation']
         assert stage1_metric in ['predictive', 'corr', 'mi']
-        if metric: assert metric in ['binary_logloss', 'multi_logloss', 'auc', 'rmse']
+        if metric: assert metric in ['binary_logloss', 'multi_logloss', 'auc', 'rmse', 'r2']
         np.random.seed(seed)
         random.seed(seed)
 
