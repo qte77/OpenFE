@@ -418,8 +418,8 @@ class OpenFE:
     def get_filtered_params(self, params):
       """Returns params:dict by params_to_get:list as dict"""
       return {
-        "type(X)": type(params["X"]),
-        "type(y)": type(params["y"]),
+        "features": params["X"].columns),
+        "target": params["y"].columns,
         "callbacks": params["callbacks"],
         "eval_metric": params["eval_metric"]
       }
