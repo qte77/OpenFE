@@ -395,7 +395,10 @@ class OpenFE:
             else:
                 return 'rmse'
         else:
-            return metric
+            if metric == 'r2':
+              return r2_score
+            else:
+              return metric
 
     def data_to_dataframe(self):
         try:
