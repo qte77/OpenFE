@@ -432,8 +432,9 @@ class OpenFE:
                 }
                 if self.metric != "r2":
                   params.update({ "metric": self.metric })
-                task = 'Classifier' if self.task == 'classification' else 'Regressor'
-                print(f"get_init_score()::LGBM{task}::{params=}")
+                if self.verbose:
+                  task = 'Classifier' if self.task == 'classification' else 'Regressor'
+                  print(f"get_init_score()::LGBM{task}::{params=}")
               
                 if self.task == "regression":
                     gbm = lgb.LGBMRegressor(**params)
@@ -582,8 +583,9 @@ class OpenFE:
             params = self.stage2_params
         if self.metric is not None and self.metric != "r2":
             params.update({ "metric": self.metric })
-        task = 'Classifier' if self.task == 'classification' else 'Regressor'
-        print(f"stage2_select()::LGBM{task}::{params=}")
+        if self.verbose:
+          task = 'Classifier' if self.task == 'classification' else 'Regressor'
+          print(f"stage2_select()::LGBM{task}::{params=}")
 
         if self.task == 'classification':
             gbm = lgb.LGBMClassifier(**params)
@@ -669,8 +671,9 @@ class OpenFE:
                 }
                 if self.metric is not None and self.metric != "r2":
                     params.update({ "metric": (self.metric) })
-                task = 'Classifier' if self.task == 'classification' else 'Regressor'
-                print(f"_evaluate()::LGBM{task}::{params=}")
+                if self.verbose:
+                  task = 'Classifier' if self.task == 'classification' else 'Regressor'
+                  print(f"_evaluate()::LGBM{task}::{params=}")
               
                 if self.task == 'classification':
                     gbm = lgb.LGBMClassifier(**params)
