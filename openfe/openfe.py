@@ -463,7 +463,7 @@ class OpenFE:
                     if self.metric == "r2":
                       params_fit.update({ "eval_metric": get_r2_score })
                     if self.verbose:
-                      params_to_print = get_params(params_fit, ['callbacks', 'eval_metric'])
+                      params_to_print = self.get_params(params_fit, ['callbacks', 'eval_metric'])
                       print(f"get_init_score()::LGBM{task}.fit()::params_fit_ex_data={params_to_print}")
                     gbm.fit(**params_fit)
 
@@ -599,7 +599,7 @@ class OpenFE:
         if self.metric == "r2":
           params_fit.update({ "eval_metric": get_r2_score })
         if self.verbose:
-          params_to_print = get_params(params_fit, ['callbacks', 'eval_metric'])
+          params_to_print = self.get_params(params_fit, ['callbacks', 'eval_metric'])
           print(f"stage2_select()::LGBM{task}.fit()::params_fit_ex_data={params_to_print}")
         gbm.fit(**params_fit)
 
@@ -686,7 +686,7 @@ class OpenFE:
                 if self.metric == "r2":
                   params_fit.update({ "eval_metric": get_r2_score })
                 if self.verbose:
-                  params_to_print = get_params(params_fit, ['callbacks', 'eval_metric'])
+                  params_to_print = self.get_params(params_fit, ['callbacks', 'eval_metric'])
                   print(f"_evaluate()::LGBM{task}.fit()::params_fit_ex_data={params_to_print}")
                 gbm.fit(**params_fit)
 
