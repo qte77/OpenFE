@@ -403,7 +403,7 @@ class OpenFE:
                 return 'rmse'
         else:
             if metric == 'r2':
-              return get_r2_score
+              return (get_r2_score)
             else:
               return metric
 
