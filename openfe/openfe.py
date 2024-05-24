@@ -635,8 +635,10 @@ class OpenFE:
             for i, imp in enumerate(gbm.feature_importances_[:len(new_features)]):
                 results.append([formula_to_tree(new_features[i]), imp])
         elif self.stage2_metric == 'permutation':
-            r = permutation_importance(gbm, val_x, val_y,
-                                       n_repeats=self.n_repeats, random_state=self.seed, n_jobs=self.n_jobs)
+            r = permutation_importance(
+              gbm, val_x, val_y, n_repeats=self.n_repeats,
+              random_state=self.seed, n_jobs=self.n_jobs
+            )
             for i, imp in enumerate(r.importances_mean[:len(new_features)]):
                 results.append([formula_to_tree(new_features[i]), imp])
         results = sorted(results, key=lambda x: x[1], reverse=True)
@@ -692,7 +694,7 @@ class OpenFE:
             if self.stage1_metric == 'predictive':
                 params = {
                   "n_estimators": n_estimators_eval, "importance_type": "gain",
-                  "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1,
+                  "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": self.n_jobs,
                   "verbosity": self.verbosity_lgbm
                 }
                 if self.metric is not None and self.metric != "r2":
