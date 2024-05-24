@@ -365,6 +365,7 @@ class TwoStageFeatureSelector:
         self.n_jobs = n_jobs
         self.seed = seed
         self.verbose = verbose
+        self.data_index_name = 'openfe_index'
 
 
     def fit(self, data, label):
@@ -404,7 +405,7 @@ class TwoStageFeatureSelector:
             self.label[self.label.columns[0]] = self.label[self.label.columns[0]].astype('category').cat.codes
 
     def process_and_save_data(self):
-        self.data.index.name = 'openfe_index'
+        self.data.index.name = self.data_index_name
         self.data.reset_index().to_feather(self.tmp_save_path)
 
     def get_index(self, train_index, val_index):
@@ -648,11 +649,11 @@ class TwoStageFeatureSelector:
     def _calculate_multiprocess(self, candidate_features, train_idx, val_idx):
         try:
             results = []
-            base_features = {'openfe_index'}
+            base_features = {self.data_index_name}
             for candidate_feature in candidate_features:
                 base_features |= set(candidate_feature.get_fnode())
 
-            data = pd.read_feather(self.tmp_save_path, columns=list(base_features)).set_index('openfe_index')
+            data = pd.read_feather(self.tmp_save_path, columns=list(base_features)).set_index(self.data_index_name)
             data_temp = data.loc[train_idx + val_idx]
             del data
             gc.collect()
@@ -692,11 +693,11 @@ class TwoStageFeatureSelector:
     def _calculate_and_evaluate_multiprocess(self, candidate_features, train_idx, val_idx):
         try:
             results = []
-            base_features = {'openfe_index'}
+            base_features = {self.data_index_name}
             for candidate_feature in candidate_features:
                 base_features.add(candidate_feature)
 
-            data = pd.read_feather(self.tmp_save_path, columns=list(base_features)).set_index('openfe_index')
+            data = pd.read_feather(self.tmp_save_path, columns=list(base_features)).set_index(self.data_index_name)
             data_temp = data.loc[train_idx + val_idx]
             del data
             gc.collect()
