@@ -309,7 +309,7 @@ class OpenFE:
         self.n_jobs = n_jobs
         self.seed = seed
         self.verbose = False if verbosity == "none" else True
-        self.verbose_params = False if verbosity == "none" or verbosity == "light" else True
+        self.verbose_params = False if verbosity == "none" else True
         self.verbosity_lgbm = 1 if verbosity == "full" else 0 if verbosity == "less" else -1
 
         self.data_to_dataframe()
@@ -323,10 +323,10 @@ class OpenFE:
         self.train_index, self.val_index = self.get_index(train_index, val_index)
         self.init_scores = self.get_init_score(init_scores, n_estimators_init_score)
 
-        self.myprint(f"The number of candidate features is {len(self.candidate_features_list)}")
+        self.myprint(f"The number of candidate features is { len(self.candidate_features_list) }")
         self.myprint("Start stage I selection.")
         self.candidate_features_list = self.stage1_select(n_estimators_eval)
-        self.myprint(f"The number of remaining candidate features is {len(self.candidate_features_list)}")
+        self.myprint(f"The number of remaining candidate features is { len(self.candidate_features_list) }")
         self.myprint("Start stage II selection.")
         self.new_features_scores_list = self.stage2_select(n_estimators_step_2)
         self.new_features_list = [feature for feature, _ in self.new_features_scores_list]
