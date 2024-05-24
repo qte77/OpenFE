@@ -134,6 +134,13 @@ def _subsample(iterators, n_data_blocks):
             results.append(iterators[:length])
     return results
 
+def get_r2_score(y_true, y_pred):
+    """
+    Expects y_true and y_pred.
+    Returns (eval_name, eval_result, is_higher_better)
+    See https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier.fit
+    """
+    return 'r2', r2_score(y_true, y_pred), true
 
 class OpenFE:
     def __init__(self):
@@ -396,7 +403,7 @@ class OpenFE:
                 return 'rmse'
         else:
             if metric == 'r2':
-              return r2_score
+              return get_r2_score
             else:
               return metric
 
