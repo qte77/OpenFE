@@ -137,7 +137,7 @@ def _subsample(iterators, n_data_blocks):
 def get_r2_score(y_true, y_pred):
     """
     Expects y_true and y_pred.
-    Returns (eval_name, eval_result, is_higher_better)
+    Returns eval_name, eval_result, is_higher_better
     See https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier.fit
     """
     return 'r2', r2_score(y_true, y_pred), True
@@ -271,10 +271,10 @@ class OpenFE:
 
         verbosity: string, optional (default='light')
             Input string of ['full', 'less', 'light', 'none']. 
-            full: OpenFe full, LightGBM verbose=1
-            less: OpenFE full, LightGBM verbose=0
-            light: OpenFE light, LightGBM verbose=-1
-            none: OpenFE none, LightGBM verbose=-1
+            full: OpenFe full, LightGBM verbosity=1
+            less: OpenFE full, LightGBM verbosity=0
+            light: OpenFE light, LightGBM verbosity=-1
+            none: OpenFE none, LightGBM verbosity=-1
 
         n_estimators_init_score: int, optional (default=10000)
         n_estimators_step_2: int, optional (default=1000)
@@ -310,7 +310,7 @@ class OpenFE:
         self.seed = seed
         self.verbose = False if verbosity == "none" else True
         self.verbose_params = False if verbosity == "none" or verbosity == "light" else True
-        self.verbose_lgbm = 1 if verbosity == "full" else 0 if verbosity == "less" else -1
+        self.verbosity_lgbm = 1 if verbosity == "full" else 0 if verbosity == "less" else -1
 
         self.data_to_dataframe()
         self.task = self.get_task(task)
@@ -449,7 +449,7 @@ class OpenFE:
                 params = {
                   "n_estimators": n_estimators_init_score, "learning_rate": 0.1,
                   "seed": self.seed, "n_jobs": self.n_jobs,
-                  "verbose": self.verbose_lgbm
+                  "verbosity": self.verbosity_lgbm
                 }
                 if self.metric != "r2":
                   params.update({ "metric": self.metric })
@@ -599,7 +599,7 @@ class OpenFE:
           params = {
             "n_estimators": n_estimators_step_2, "importance_type": "gain",
             "num_leaves": 16, "seed": 1, "n_jobs": self.n_jobs,
-            "verbose": self.verbose_lgbm
+            "verbosity": self.verbosity_lgbm
           }
         else:
             params = self.stage2_params
@@ -688,7 +688,7 @@ class OpenFE:
                 params = {
                   "n_estimators": n_estimators_eval, "importance_type": "gain",
                   "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1,
-                  "verbose": self.verbose_lgbm
+                  "verbosity": self.verbosity_lgbm
                 }
                 if self.metric is not None and self.metric != "r2":
                     params.update({ "metric": (self.metric) })
