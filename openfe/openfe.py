@@ -452,9 +452,9 @@ class OpenFE:
                     X_val, y_val = data.iloc[val_index], label.iloc[val_index]
 
                     params_fit = {
-                      X = X_train, y = y_train.values.ravel(),
-                      eval_set = [[X_val, y_val.values.ravel()]],
-                      callbacks=[lgb.early_stopping(200)]
+                      "X": X_train, "y": y_train.values.ravel(),
+                      "eval_set": [[X_val, y_val.values.ravel()]],
+                      "callbacks": [lgb.early_stopping(200)]
                     }
                     if self.metric == "r2":
                       params_fit.update({ "eval_metric": get_r2_score })
@@ -585,9 +585,10 @@ class OpenFE:
             gbm = lgb.LGBMRegressor(**params)
 
         params_fit = {
-          X = train_x, y = train_y.values.ravel(), init_score = train_init,
-          eval_init_score = [val_init], eval_set = [(val_x, val_y.values.ravel())],
-          callbacks = [lgb.early_stopping(50, verbose=False)],
+          "X": train_x, "y": train_y.values.ravel(),
+          "init_score": train_init, "eval_init_score": [val_init],
+          "eval_set": [(val_x, val_y.values.ravel())],
+          "callbacks": [lgb.early_stopping(50, verbose=False)],
         }
         if self.metric == "r2":
           params_fit.update({ "eval_metric": get_r2_score })
@@ -669,9 +670,10 @@ class OpenFE:
                     gbm = lgb.LGBMRegressor(**params)
 
                 params_fit = {
-                  X = train_x, y = train_y.values.ravel(), init_score=train_init,
-                  eval_init_score=[val_init], eval_set=[(val_x, val_y.values.ravel())],
-                  callbacks=[lgb.early_stopping(3, verbose=False)]
+                  "X": train_x, "y": train_y.values.ravel(),
+                  "init_score": train_init, "eval_init_score": [val_init],
+                  "eval_set": [(val_x, val_y.values.ravel())],
+                  "callbacks": [lgb.early_stopping(3, verbose=False)]
                 }
                 if self.metric == "r2":
                   params_fit.update({ "eval_metric": get_r2_score })
