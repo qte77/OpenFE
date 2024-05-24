@@ -140,7 +140,7 @@ def get_r2_score(y_true, y_pred):
     Returns (eval_name, eval_result, is_higher_better)
     See https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier.fit
     """
-    return 'r2', r2_score(y_true, y_pred), true
+    return 'r2', r2_score(y_true, y_pred), True
 
 class OpenFE:
     def __init__(self):
@@ -403,7 +403,7 @@ class OpenFE:
                 return 'rmse'
         else:
             if metric == 'r2':
-              return (get_r2_score)
+              return get_r2_score
             else:
               return metric
 
@@ -426,7 +426,7 @@ class OpenFE:
                 label = self.label.copy()
                 params = {
                   "n_estimators": n_estimators_init_score, "learning_rate": 0.1,
-                  "metric": self.metric, "seed": self.seed, "n_jobs": self.n_jobs
+                  "metric": (self.metric), "seed": self.seed, "n_jobs": self.n_jobs
                 }
                 task = 'Classifier' if self.task == 'classification' else 'Regressor'
                 print(f"get_init_score()::LGBM{task}::{params=}")
@@ -571,7 +571,7 @@ class OpenFE:
         task = 'Classifier' if self.task == 'classification' else 'Regressor'
         print(f"stage2_select()::LGBM{task}::{params=}")
         if self.metric is not None:
-            params.update({"metric": self.metric})
+            params.update({ "metric": (self.metric) })
         if self.task == 'classification':
             gbm = lgb.LGBMClassifier(**params)
         else:
@@ -648,7 +648,7 @@ class OpenFE:
                 task = 'Classifier' if self.task == 'classification' else 'Regressor'
                 print(f"_evaluate()::LGBM{task}::{params=}")
                 if self.metric is not None:
-                    params.update({"metric": self.metric})
+                    params.update({ "metric": (self.metric) })
                 if self.task == 'classification':
                     gbm = lgb.LGBMClassifier(**params)
                 else:
