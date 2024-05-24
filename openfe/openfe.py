@@ -11,7 +11,7 @@ import traceback
 from .utils import tree_to_formula, check_xor, formula_to_tree
 from sklearn.inspection import permutation_importance
 from sklearn.feature_selection import mutual_info_regression, mutual_info_classif
-from sklearn.metrics import mean_squared_error, log_loss, roc_auc_score
+from sklearn.metrics import mean_squared_error, log_loss, roc_auc_score, r2_score
 import scipy.special
 from copy import deepcopy
 from tqdm import tqdm
@@ -148,7 +148,8 @@ class OpenFE:
             candidate_features_list=None,
             init_scores=None,
             categorical_features=None,
-            metric=None, drop_columns=None,
+            metric=None,
+            drop_columns=None,
             n_data_blocks=8,
             min_candidate_features=2000,
             feature_boosting=False,
@@ -205,6 +206,7 @@ class OpenFE:
             support ['binary_logloss', 'multi_logloss', 'auc', 'rmse']. The default metric is
             'binary_logloss' for binary-classification, 'multi_logloss' for multi-classification,
             and 'rmse' for regression tasks.
+            Added 'r2'
 
         drop_columns: list, optional (default=None)
             A list of columns you would like to drop when building the LightGBM in stage2.
@@ -281,7 +283,6 @@ class OpenFE:
 
         self.data = data
         self.label = label
-        self.metric = metric
         self.drop_columns = drop_columns
         self.n_data_blocks = n_data_blocks
         self.min_candidate_features = min_candidate_features
@@ -439,8 +440,11 @@ class OpenFE:
                     X_train, y_train = data.iloc[train_index], label.iloc[train_index]
                     X_val, y_val = data.iloc[val_index], label.iloc[val_index]
 
-                    gbm.fit(X_train, y_train.values.ravel(),
-                            eval_set=[[X_val, y_val.values.ravel()]], callbacks=[lgb.early_stopping(200)])
+                    gbm.fit(
+                      X_train, y_train.values.ravel(),
+                      eval_set=[[X_val, y_val.values.ravel()]],
+                      callbacks=[lgb.early_stopping(200)]
+                    )
 
                     if use_train:
                         init_scores[train_index] += (gbm.predict_proba(X_train, raw_score=True) if self.task == "classification" else \
@@ -562,10 +566,11 @@ class OpenFE:
             gbm = lgb.LGBMClassifier(**params)
         else:
             gbm = lgb.LGBMRegressor(**params)
-        gbm.fit(train_x, train_y.values.ravel(), init_score=train_init,
-                eval_init_score=[val_init],
-                eval_set=[(val_x, val_y.values.ravel())],
-                callbacks=[lgb.early_stopping(50, verbose=False)])
+        gbm.fit(
+          train_x, train_y.values.ravel(), init_score=train_init,
+          eval_init_score=[val_init], eval_set=[(val_x, val_y.values.ravel())],
+          callbacks=[lgb.early_stopping(50, verbose=False)]
+        )
         results = []
         if self.stage2_metric == 'gain_importance':
             for i, imp in enumerate(gbm.feature_importances_[:len(new_features)]):
@@ -589,10 +594,14 @@ class OpenFE:
             init_metric = mean_squared_error(label, pred, squared=False)
         elif self.metric == 'auc':
             init_metric = roc_auc_score(label, scipy.special.expit(pred))
+        elif self.metric == 'r2':
+            init_metric = r2_score(label, scipy.special.expit(pred))
         else:
-            raise NotImplementedError(f"Metric {self.metric} is not supported. "
-                                      f"Please select metric from ['binary_logloss', 'multi_logloss'"
-                                      f"'rmse', 'auc'].")
+            raise NotImplementedError(
+              f"Metric {self.metric} is not supported. "
+              f"Please select metric from ['binary_logloss', 'multi_logloss'"
+              f"'rmse', 'auc', 'r2']."
+            )
         return init_metric
 
     def delete_same(self, candidate_features_scores, threshold=1e-20):
@@ -634,10 +643,11 @@ class OpenFE:
                     gbm = lgb.LGBMClassifier(**params)
                 else:
                     gbm = lgb.LGBMRegressor(**params)
-                gbm.fit(train_x, train_y.values.ravel(), init_score=train_init,
-                        eval_init_score=[val_init],
-                        eval_set=[(val_x, val_y.values.ravel())],
-                        callbacks=[lgb.early_stopping(3, verbose=False)])
+                gbm.fit(
+                  train_x, train_y.values.ravel(), init_score=train_init,
+                  eval_init_score=[val_init], eval_set=[(val_x, val_y.values.ravel())],
+                  callbacks=[lgb.early_stopping(3, verbose=False)]
+                )
                 key = list(gbm.best_score_['valid_0'].keys())[0]
                 if self.metric in ['auc']:
                     score = gbm.best_score_['valid_0'][key] - init_metric
@@ -838,6 +848,3 @@ class OpenFE:
         self.myprint("Finish transformation.")
         os.remove(self.tmp_save_path)
         return _train, _test
-
-
-
