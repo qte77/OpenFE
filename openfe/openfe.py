@@ -696,7 +696,7 @@ class OpenFE:
                 if self.metric == "r2":
                   params_fit.update({ "eval_metric": get_r2_score })
                 if self.verbose:
-                  self.print_params(params_fit, ['callbacks', 'eval_metric']), "_evaluate()")
+                  self.print_params(params_fit, ['callbacks', 'eval_metric'], "_evaluate()")
                 gbm.fit(**params_fit)
 
                 key = list(gbm.best_score_['valid_0'].keys())[0]
