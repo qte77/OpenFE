@@ -408,7 +408,7 @@ class OpenFE:
       """Returns params:dict by params_to_get:list as dict"""
       return {k[0]:params[k[0]] for k in zip(params.keys(), params_to_get)}
 
-    def print_params(params, params_to_print=None, source=None):
+    def print_params(self, params, params_to_print=None, source=None):
       source = "" if source is None else f"{source}::"
       task = 'Classifier' if self.task == 'classification' else 'Regressor'
       if params_to_print is not None and type(params_to_print) is list:
