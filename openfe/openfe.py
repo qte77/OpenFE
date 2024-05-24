@@ -417,12 +417,12 @@ class OpenFE:
 
     def get_filtered_params(self, params, params_to_get=['features', 'callbacks', 'eval_metric']):
       """Returns params:dict by params_to_get:list as dict"""
-      return {k[0]:params[k[0]] for k in zip(params.keys(), params_to_get)}
+      return { k[0]:params[k[0]] for k in zip(params.keys(), params_to_get) }
 
     def print_params(self, params, source=None, params_fit_subset=False):
       source = "" if source is None else f"{source}::"
       task = 'Classifier' if self.task == 'classification' else 'Regressor'
-      if params_fit_subset and type(params_to_print) is list:
+      if params_fit_subset and type(params_fit_subset) is list:
         lgbm_fun_to_print = ".fit()"
         params_print_label = "params_fit_ex_data"
         params = self.get_filtered_params(params)
