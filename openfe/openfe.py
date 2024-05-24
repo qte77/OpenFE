@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split, StratifiedKFold, KFold
 from .FeatureGenerator import *
 import random
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor
 import traceback
 from .utils import tree_to_formula, check_xor, formula_to_tree
 from sklearn.inspection import permutation_importance
@@ -169,7 +169,7 @@ class OpenFE:
             is_stage1=True,
             n_repeats=1,
             tmp_save_path='./openfe_tmp_data_xx.feather',
-            n_jobs=1,
+            n_jobs=None,
             seed=1,
             verbosity="light",
             n_estimators_init_score=10000,
@@ -807,11 +807,11 @@ class OpenFE:
         random.shuffle(candidate_features)
         # for f in candidate_features:
         #     f.delete()
+        print(
+            f"Starting to calculate {self.n_jobs} processes and {n} candidate batches"
+        )
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
             with tqdm(total=n) as progress:
-                print(
-                    f"Starting to calculate {self.n_jobs} processes and {n} candidate batches"
-                )
                 # TODO: remove print stale/deadlock
                 # print(f"_calculate()::ProcessPoolExecutor::{ex}")
 
@@ -877,20 +877,19 @@ class OpenFE:
     def _calculate_and_evaluate(
         self, candidate_features, train_idx, val_idx, n_estimators_eval
     ):
-        futures = []
-        results = []    
+        futures = [] 
         candidates_num = len(candidate_features)
         length = int(np.ceil(candidates_num / self.n_jobs / 4))
         n = int(np.ceil(candidates_num / length))
         random.shuffle(candidate_features)
         for f in candidate_features:
             f.delete()
+        if self.verbose:
+            print(
+                f"Starting to calculate and evaluate with {self.n_jobs} processes and "
+                f"{n} candidate batches length approx. {length} out of {candidates_num} candiates"
+            )
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
-            if self.verbose:
-                print(
-                    f"Starting to calculate and evaluate with {self.n_jobs} processes and "
-                    f"{n} candidate batches length approx. {length} out of {candidates_num} candiates"
-                )
             with tqdm(total=n) as progress:
                 for i in range(n):
                     cf_slice = slice(i * length, candidates_num) if i == (n-1) else \
@@ -901,10 +900,8 @@ class OpenFE:
                         train_idx, val_idx, n_estimators_eval
                     )
                     future.add_done_callback(lambda p: progress.update())
-                    futures.append(future)        
-            for f in tqdm(as_completed(futures)):
-                results.extend(f.result())
-        return results
+                    futures.append(future)
+        return [f.result() for f in futures]
     #endregion _calculate
 
     #region transform
