@@ -806,26 +806,33 @@ class OpenFE:
         # for f in candidate_features:
         #     f.delete()
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
-            # with tqdm(total=n) as progress:
-            print("_calculate()::ProcessPoolExecutor::{ex}")
-            for i in tqdm(range(n)):
-                if i == (n - 1):
-                    future = ex.submit(
-                        self._calculate_multiprocess,
-                        candidate_features[i * length:],
-                        train_idx, val_idx
-                    )
-                else:
-                    future = ex.submit(
-                        self._calculate_multiprocess,
-                        candidate_features[i * length:(i + 1) * length],
-                        train_idx, val_idx
-                    )
-                # future.add_done_callback(lambda p: progress.update())
-                results.append(future)
-                res = []
-            for r in tqdm(results):
-                res.extend(r.result())
+            with tqdm(total=n) as progress:
+
+                #TODO print stale/deadlock
+                print(f"_calculate()::ProcessPoolExecutor::{ex}")
+
+                for i in tqdm(range(n)):
+                    if i == (n - 1):
+                        future = ex.submit(
+                            self._calculate_multiprocess,
+                            candidate_features[i * length:],
+                            train_idx, val_idx
+                        )
+                    else:
+                        future = ex.submit(
+                            self._calculate_multiprocess,
+                            candidate_features[i * length:(i + 1) * length],
+                            train_idx, val_idx
+                        )
+
+                    #TODO print stale/deadlock
+                    print(f"_calculate()::ProcessPoolExecutor::{future}")
+
+                    future.add_done_callback(lambda p: progress.update())
+                    results.append(future)
+                    res = []
+                for r in tqdm(results):
+                    res.extend(r.result())
         return res
 
     def _calculate_and_evaluate_multiprocess(
@@ -850,7 +857,10 @@ class OpenFE:
             val_init = self.init_scores.loc[val_idx]
             init_metric = self.get_init_metric(val_init, val_y)
             for candidate_feature in candidate_features:
-                print("_calculate_and_evaluate_multiprocess()::for::{candidate_feature}")
+
+                #TODO print stale/deadlock
+                print(f"_calculate_and_evaluate_multiprocess()::for::{candidate_feature}")
+
                 candidate_feature.calculate(data_temp, is_root=True)
                 score = self._evaluate(
                   candidate_feature,
@@ -874,7 +884,10 @@ class OpenFE:
         for f in candidate_features:
             f.delete()
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
-            print("_calculate_and_evaluate()::ProcessPoolExecutor::{ex}")
+
+            #TODO print stale/deadlock
+            print(f"_calculate_and_evaluate()::ProcessPoolExecutor::{ex}")
+
             with tqdm(total=n) as progress:
                 for i in range(n):
                     if i == (n-1):
@@ -889,6 +902,10 @@ class OpenFE:
                             candidate_features[i * length:(i + 1) * length],
                             train_idx, val_idx, n_estimators_eval
                         )
+
+                    #TODO print stale/deadlock
+                    print(f"_calculate_and_evaluate()::ProcessPoolExecutor::{future}")
+
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
                 res = []
