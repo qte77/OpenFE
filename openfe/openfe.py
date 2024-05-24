@@ -590,8 +590,7 @@ class OpenFE:
             "num_leaves": 16, "seed": 1, "n_jobs": self.n_jobs
           }
         else:
-            para
-          ms = self.stage2_params
+            params = self.stage2_params
         if self.metric is not None and self.metric != "r2":
             params.update({ "metric": self.metric })
         if self.verbose:
