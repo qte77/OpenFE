@@ -146,7 +146,7 @@ class OpenFE:
     def __init__(self):
         pass
     
-    #region fit
+    #region fit()
     def fit(self,
             data: pd.DataFrame,
             label: pd.DataFrame,
@@ -312,6 +312,7 @@ class OpenFE:
         self.verbose = False if verbosity == "none" else True
         self.verbose_params = False if verbosity in ["none", "light"] else True
         self.verbosity_lgbm = 1 if verbosity == "full" else 0 if verbosity == "less" else -1
+        self.data_index_name = 'openfe_index'
 
         self.data_to_dataframe()
         self.task = self.get_task(task)
@@ -355,7 +356,7 @@ class OpenFE:
             self.label[self.label.columns[0]] = self.label[self.label.columns[0]].astype('category').cat.codes
 
     def process_and_save_data(self):
-        self.data.index.name = 'openfe_index'
+        self.data.index.name = self.data_index_name
         self.data.reset_index().to_feather(self.tmp_save_path)
 
     def get_index(self, train_index, val_index):
@@ -578,20 +579,26 @@ class OpenFE:
             self.label = self.label.loc[train_index+val_index]
             self.train_index = train_index
             self.val_index = val_index
-            return [[f, 0] for f in self._calculate(self.candidate_features_list, train_index, val_index)]
+            return [[f, 0] for f in self._calculate(
+                self.candidate_features_list, train_index, val_index
+            )]
         train_index_samples = _subsample(self.train_index, self.n_data_blocks)
         val_index_samples = _subsample(self.val_index, self.n_data_blocks)
         idx = 0
         train_idx = train_index_samples[idx]
         val_idx = val_index_samples[idx]
         idx += 1
-        results = self._calculate_and_evaluate(self.candidate_features_list, train_idx, val_idx, n_estimators_eval)
+        results = self._calculate_and_evaluate(
+            self.candidate_features_list, train_idx, val_idx, n_estimators_eval
+        )
         candidate_features_scores = sorted(results, key=lambda x: x[1], reverse=True)
         candidate_features_scores = self.delete_same(candidate_features_scores)
 
         while idx != len(train_index_samples):
-            n_reserved_features = max(int(len(candidate_features_scores)*ratio),
-                                      min(len(candidate_features_scores), self.min_candidate_features))
+            n_reserved_features = max(
+                int(len(candidate_features_scores)*ratio),
+                min(len(candidate_features_scores), self.min_candidate_features)
+            )
             train_idx = train_index_samples[idx]
             val_idx = val_index_samples[idx]
             idx += 1
@@ -600,10 +607,14 @@ class OpenFE:
                 val_idx = val_index_samples[-1]
                 idx = len(train_index_samples)
                 self.myprint("Meet early-stopping in successive feature-wise halving.")
-            candidate_features_list = [item[0] for item in candidate_features_scores[:n_reserved_features]]
+            candidate_features_list = [
+                item[0] for item in candidate_features_scores[:n_reserved_features]
+            ]
             del candidate_features_scores[n_reserved_features:]; gc.collect()
 
-            results = self._calculate_and_evaluate(candidate_features_list, train_idx, val_idx, n_estimators_eval)
+            results = self._calculate_and_evaluate(
+                candidate_features_list, train_idx, val_idx, n_estimators_eval
+            )
             candidate_features_scores = sorted(results, key=lambda x: x[1], reverse=True)
 
         return_results = [item[0] for item in candidate_features_scores if item[1] > 0]
@@ -614,9 +625,11 @@ class OpenFE:
     def stage2_select(self, n_estimators_step_2=1000):
         data_new = []
         new_features = []
-        self.candidate_features_list = self._calculate(self.candidate_features_list,
-                                                       self.train_index.to_list(),
-                                                       self.val_index.to_list())
+        self.candidate_features_list = self._calculate(
+            self.candidate_features_list,
+            self.train_index.to_list(),
+            self.val_index.to_list()
+        )
         index_tmp = self.candidate_features_list[0].data.index
         for feature in self.candidate_features_list:
             new_features.append(tree_to_formula(feature))
@@ -624,8 +637,10 @@ class OpenFE:
             feature.delete()
         gc.collect()
         data_new = np.vstack(data_new)
-        data_new = pd.DataFrame(data_new.T, index=index_tmp,
-                                columns=['autoFE-%d' % i for i in range(len(new_features))])
+        data_new = pd.DataFrame(
+            data_new.T, index=index_tmp,
+            columns=['autoFE-%d' % i for i in range(len(new_features))]
+        )
         data_new = pd.concat([data_new, self.data], axis=1)
         for f in self.categorical_features:
             data_new[f] = data_new[f].astype('category')
@@ -734,16 +749,22 @@ class OpenFE:
                 else:
                     score = init_metric - gbm.best_score_['valid_0'][key]
             elif self.stage1_metric == 'corr':
-                score = np.corrcoef(pd.concat([train_x, val_x], axis=0).fillna(0).values.ravel(),
-                                    pd.concat([train_y, val_y], axis=0).fillna(0).values.ravel())[0, 1]
+                score = np.corrcoef(
+                    pd.concat([train_x, val_x], axis=0).fillna(0).values.ravel(),
+                    pd.concat([train_y, val_y], axis=0).fillna(0).values.ravel()
+                )[0, 1]
                 score = abs(score)
             elif self.stage1_metric == 'mi':
                 if self.task == 'regression':
-                    r = mutual_info_regression(pd.concat([train_x, val_x], axis=0).replace([np.inf, -np.inf], 0).fillna(0),
-                                               pd.concat([train_y, val_y], axis=0).values.ravel())
+                    r = mutual_info_regression(
+                        pd.concat([train_x, val_x], axis=0).replace([np.inf, -np.inf], 0).fillna(0),
+                        pd.concat([train_y, val_y], axis=0).values.ravel()
+                    )
                 else:
-                    r = mutual_info_classif(pd.concat([train_x, val_x], axis=0).replace([np.inf, -np.inf], 0).fillna(0),
-                                            pd.concat([train_y, val_y], axis=0).values.ravel())
+                    r = mutual_info_classif(
+                        pd.concat([train_x, val_x], axis=0).replace([np.inf, -np.inf], 0).fillna(0),
+                        pd.concat([train_y, val_y], axis=0).values.ravel()
+                    )
                 score = r[0]
             else:
                 raise NotImplementedError("Cannot recognize filter_metric %s." % self.stage1_metric)
@@ -757,11 +778,13 @@ class OpenFE:
     def _calculate_multiprocess(self, candidate_features, train_idx, val_idx):
         try:
             results = []
-            base_features = {'openfe_index'}
+            base_features = {self.data_index_name}
             for candidate_feature in candidate_features:
                 base_features |= set(candidate_feature.get_fnode())
 
-            data = pd.read_feather(self.tmp_save_path, columns=list(base_features)).set_index('openfe_index')
+            data = pd.read_feather(
+                self.tmp_save_path, columns=list(base_features)
+            ).set_index(self.data_index_name)
             data_temp = data.loc[train_idx + val_idx]
             del data
             gc.collect()
@@ -783,31 +806,40 @@ class OpenFE:
         # for f in candidate_features:
         #     f.delete()
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
-            with tqdm(total=n) as progress:
-                for i in range(n):
-                    if i == (n - 1):
-                        future = ex.submit(self._calculate_multiprocess,
-                                           candidate_features[i * length:],
-                                           train_idx, val_idx)
-                    else:
-                        future = ex.submit(self._calculate_multiprocess,
-                                           candidate_features[i * length:(i + 1) * length],
-                                           train_idx, val_idx)
-                    future.add_done_callback(lambda p: progress.update())
-                    results.append(future)
+            # with tqdm(total=n) as progress:
+            print("_calculate()::ProcessPoolExecutor::{ex}")
+            for i in tqdm(range(n)):
+                if i == (n - 1):
+                    future = ex.submit(
+                        self._calculate_multiprocess,
+                        candidate_features[i * length:],
+                        train_idx, val_idx
+                    )
+                else:
+                    future = ex.submit(
+                        self._calculate_multiprocess,
+                        candidate_features[i * length:(i + 1) * length],
+                        train_idx, val_idx
+                    )
+                # future.add_done_callback(lambda p: progress.update())
+                results.append(future)
                 res = []
-                for r in results:
-                    res.extend(r.result())
+            for r in tqdm(results):
+                res.extend(r.result())
         return res
 
-    def _calculate_and_evaluate_multiprocess(self, candidate_features, train_idx, val_idx, n_estimators_eval):
+    def _calculate_and_evaluate_multiprocess(
+        self, candidate_features, train_idx, val_idx, n_estimators_eval
+    ):
         try:
             results = []
-            base_features = {'openfe_index'}
+            base_features = {self.data_index_name}
             for candidate_feature in candidate_features:
                 base_features |= set(candidate_feature.get_fnode())
 
-            data = pd.read_feather(self.tmp_save_path, columns=list(base_features)).set_index('openfe_index')
+            data = pd.read_feather(
+                self.tmp_save_path, columns=list(base_features
+            )).set_index(self.data_index_name)
             data_temp = data.loc[train_idx + val_idx]
             del data
             gc.collect()
@@ -818,6 +850,7 @@ class OpenFE:
             val_init = self.init_scores.loc[val_idx]
             init_metric = self.get_init_metric(val_init, val_y)
             for candidate_feature in candidate_features:
+                print("_calculate_and_evaluate_multiprocess()::for::{candidate_feature}")
                 candidate_feature.calculate(data_temp, is_root=True)
                 score = self._evaluate(
                   candidate_feature,
@@ -831,7 +864,9 @@ class OpenFE:
             print(traceback.format_exc())
             exit()
 
-    def _calculate_and_evaluate(self, candidate_features, train_idx, val_idx, n_estimators_eval):
+    def _calculate_and_evaluate(
+        self, candidate_features, train_idx, val_idx, n_estimators_eval
+    ):
         results = []
         length = int(np.ceil(len(candidate_features) / self.n_jobs / 4))
         n = int(np.ceil(len(candidate_features) / length))
@@ -839,16 +874,21 @@ class OpenFE:
         for f in candidate_features:
             f.delete()
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
+            print("_calculate_and_evaluate()::ProcessPoolExecutor::{ex}")
             with tqdm(total=n) as progress:
                 for i in range(n):
                     if i == (n-1):
-                        future = ex.submit(self._calculate_and_evaluate_multiprocess,
-                                                 candidate_features[i * length:],
-                                                 train_idx, val_idx, n_estimators_eval)
+                        future = ex.submit(
+                            self._calculate_and_evaluate_multiprocess,
+                            candidate_features[i * length:],
+                            train_idx, val_idx, n_estimators_eval
+                        )
                     else:
-                        future = ex.submit(self._calculate_and_evaluate_multiprocess,
-                                                 candidate_features[i * length:(i + 1) * length],
-                                                 train_idx, val_idx, n_estimators_eval)
+                        future = ex.submit(
+                            self._calculate_and_evaluate_multiprocess,
+                            candidate_features[i * length:(i + 1) * length],
+                            train_idx, val_idx, n_estimators_eval
+                        )
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
                 res = []
@@ -860,9 +900,11 @@ class OpenFE:
     #region transform
     def _trans(self, feature, n_train):
         try:
-            base_features = ['openfe_index']
+            base_features = [self.data_index_name]
             base_features.extend(feature.get_fnode())
-            _data = pd.read_feather(self.tmp_save_path, columns=base_features).set_index('openfe_index')
+            _data = pd.read_feather(
+                self.tmp_save_path, columns=base_features
+            ).set_index(self.data_index_name)
             feature.calculate(_data, is_root=True)
             if (str(feature.data.dtype) == 'category') | (str(feature.data.dtype) == 'object'):
                 pass
@@ -873,13 +915,14 @@ class OpenFE:
             print(traceback.format_exc())
             exit()
         return ((str(feature.data.dtype) == 'category') or (str(feature.data.dtype) == 'object')), \
-               feature.data.values.ravel()[:n_train], \
-               feature.data.values.ravel()[n_train:], \
-               tree_to_formula(feature)
+            feature.data.values.ravel()[:n_train], \
+            feature.data.values.ravel()[n_train:], \
+            tree_to_formula(feature)
 
     def transform(self, X_train, X_test, new_features_list, n_jobs, name=""):
-        """ Transform train and test data according to new features. Since there are global operators such as
-        'GroupByThenMean', train and test data need to be transformed together.
+        """
+        Transform train and test data according to new features. Since there are global operators
+        such as 'GroupByThenMean', train and test data need to be transformed together.
 
         :param X_train: pd.DataFrame, the train data
         :param X_test:  pd.DataFrame, the test data
@@ -892,7 +935,7 @@ class OpenFE:
             return X_train, X_test
 
         data = pd.concat([X_train, X_test], axis=0)
-        data.index.name = 'openfe_index'
+        data.index.name = self.data_index_name
         data.reset_index().to_feather(self.tmp_save_path)
         n_train = len(X_train)
 
