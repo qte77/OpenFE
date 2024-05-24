@@ -808,10 +808,10 @@ class OpenFE:
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
             with tqdm(total=n) as progress:
 
-                #TODO print stale/deadlock
+                # TODO: remove print stale/deadlock
                 print(f"_calculate()::ProcessPoolExecutor::{ex}")
 
-                for i in tqdm(range(n)):
+                for i in range(n):
                     if i == (n - 1):
                         future = ex.submit(
                             self._calculate_multiprocess,
@@ -825,13 +825,13 @@ class OpenFE:
                             train_idx, val_idx
                         )
 
-                    #TODO print stale/deadlock
+                    # TODO: remove print stale/deadlock
                     print(f"_calculate()::ProcessPoolExecutor::{future}")
 
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
                     res = []
-                for r in tqdm(results):
+                for r in results:
                     res.extend(r.result())
         return res
 
@@ -856,10 +856,10 @@ class OpenFE:
             train_init = self.init_scores.loc[train_idx]
             val_init = self.init_scores.loc[val_idx]
             init_metric = self.get_init_metric(val_init, val_y)
-            for candidate_feature in tqdm(candidate_features):
+            for i, candidate_feature in tqdm(enumerate(candidate_features), position=0, leave=True):
 
-                #TODO print stale/deadlock
-                #print(f"_calculate_and_evaluate_multiprocess()::for::{candidate_feature}")
+                # TODO: remove print stale/deadlock
+                print(f"_calculate_and_evaluate_multiprocess()::for::cf#{i}")
 
                 candidate_feature.calculate(data_temp, is_root=True)
                 score = self._evaluate(
@@ -884,10 +884,8 @@ class OpenFE:
         for f in candidate_features:
             f.delete()
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
-
-            #TODO print stale/deadlock
-            print(f"_calculate_and_evaluate()::ProcessPoolExecutor::{ex}")
-
+            if self.verbose:
+                print(f"Starting calculate and evaluate with {n} processes")
             with tqdm(total=n) as progress:
                 for i in range(n):
                     if i == (n-1):
@@ -903,8 +901,8 @@ class OpenFE:
                             train_idx, val_idx, n_estimators_eval
                         )
 
-                    #TODO print stale/deadlock
-                    print(f"_calculate_and_evaluate()::ProcessPoolExecutor::{future}")
+                    # TODO: remove print stale/deadlock
+                    print(f"_calculate_and_evaluate()::ProcessPoolExecutor::iter{i}::{future}")
 
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
