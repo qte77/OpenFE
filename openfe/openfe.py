@@ -394,18 +394,15 @@ class OpenFE:
 
     def get_metric(self, metric):
         if metric is None:
-            if self.task == 'classification':
-                if self.label[self.label.columns[0]].nunique() > 2:
-                    return 'multi_logloss'
-                else:
-                    return 'binary_logloss'
+          if self.task == 'classification':
+            if self.label[self.label.columns[0]].nunique() > 2:
+              return 'multi_logloss'
             else:
-                return 'rmse'
+              return 'binary_logloss'
+          else:
+            return 'rmse'
         else:
-            if metric == 'r2':
-              return get_r2_score
-            else:
-              return metric
+          return metric
 
     def data_to_dataframe(self):
         try:
@@ -424,10 +421,13 @@ class OpenFE:
             if self.feature_boosting:
                 data = self.data.copy()
                 label = self.label.copy()
+              
                 params = {
                   "n_estimators": n_estimators_init_score, "learning_rate": 0.1,
-                  "metric": (self.metric), "seed": self.seed, "n_jobs": self.n_jobs
+                  "seed": self.seed, "n_jobs": self.n_jobs
                 }
+                if self.metric != "r2":
+                  params.update({ "metric": self.metric })
                 task = 'Classifier' if self.task == 'classification' else 'Regressor'
                 print(f"get_init_score()::LGBM{task}::{params=}")
               
@@ -446,15 +446,20 @@ class OpenFE:
                 else:
                     init_scores = np.zeros(len(data))
                 skf = StratifiedKFold(n_splits=5) if self.task == "classification" else KFold(n_splits=5)
+              
                 for train_index, val_index in skf.split(data, label):
                     X_train, y_train = data.iloc[train_index], label.iloc[train_index]
                     X_val, y_val = data.iloc[val_index], label.iloc[val_index]
 
-                    gbm.fit(
-                      X_train, y_train.values.ravel(),
-                      eval_set=[[X_val, y_val.values.ravel()]],
+                    params_fit = {
+                      X = X_train, y = y_train.values.ravel(),
+                      eval_set = [[X_val, y_val.values.ravel()]],
                       callbacks=[lgb.early_stopping(200)]
-                    )
+                    }
+                    if self.metric == "r2":
+                      params_fit.update({ "eval_metric": get_r2_score })
+                    print(f"get_init_score()::LGBM{task}.fit()::{params_fit=}")
+                    gbm.fit(**params_fit)
 
                     if use_train:
                         init_scores[train_index] += (gbm.predict_proba(X_train, raw_score=True) if self.task == "classification" else \
@@ -561,6 +566,7 @@ class OpenFE:
         del data_new
         gc.collect()
         self.myprint("Finish data processing.")
+      
         if self.stage2_params is None:
           params = {
             "n_estimators": n_estimators_step_2, "importance_type": "gain",
@@ -568,19 +574,26 @@ class OpenFE:
           }
         else:
             params = self.stage2_params
+        if self.metric is not None and self.metric != "r2":
+            params.update({ "metric": self.metric })
         task = 'Classifier' if self.task == 'classification' else 'Regressor'
         print(f"stage2_select()::LGBM{task}::{params=}")
-        if self.metric is not None:
-            params.update({ "metric": (self.metric) })
+
         if self.task == 'classification':
             gbm = lgb.LGBMClassifier(**params)
         else:
             gbm = lgb.LGBMRegressor(**params)
-        gbm.fit(
-          train_x, train_y.values.ravel(), init_score=train_init,
-          eval_init_score=[val_init], eval_set=[(val_x, val_y.values.ravel())],
-          callbacks=[lgb.early_stopping(50, verbose=False)]
-        )
+
+        params_fit = {
+          X = train_x, y = train_y.values.ravel(), init_score = train_init,
+          eval_init_score = [val_init], eval_set = [(val_x, val_y.values.ravel())],
+          callbacks = [lgb.early_stopping(50, verbose=False)],
+        }
+        if self.metric == "r2":
+          params_fit.update({ "eval_metric": get_r2_score })
+        print(f"stage2_select()::LGBM{task}.fit()::{params_fit=}")
+        gbm.fit(**params_fit)
+
         results = []
         if self.stage2_metric == 'gain_importance':
             for i, imp in enumerate(gbm.feature_importances_[:len(new_features)]):
@@ -645,19 +658,26 @@ class OpenFE:
                   "n_estimators": n_estimators_eval, "importance_type": "gain",
                   "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1
                 }
+                if self.metric is not None and self.metric != "r2":
+                    params.update({ "metric": (self.metric) })
                 task = 'Classifier' if self.task == 'classification' else 'Regressor'
                 print(f"_evaluate()::LGBM{task}::{params=}")
-                if self.metric is not None:
-                    params.update({ "metric": (self.metric) })
+              
                 if self.task == 'classification':
                     gbm = lgb.LGBMClassifier(**params)
                 else:
                     gbm = lgb.LGBMRegressor(**params)
-                gbm.fit(
-                  train_x, train_y.values.ravel(), init_score=train_init,
+
+                params_fit = {
+                  X = train_x, y = train_y.values.ravel(), init_score=train_init,
                   eval_init_score=[val_init], eval_set=[(val_x, val_y.values.ravel())],
                   callbacks=[lgb.early_stopping(3, verbose=False)]
-                )
+                }
+                if self.metric == "r2":
+                  params_fit.update({ "eval_metric": get_r2_score })
+                print(f"_evaluate()::LGBM{task}.fit()::{params_fit=}")
+                gbm.fit(**params_fit)
+
                 key = list(gbm.best_score_['valid_0'].keys())[0]
                 if self.metric in ['auc']:
                     score = gbm.best_score_['valid_0'][key] - init_metric
