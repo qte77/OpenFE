@@ -168,7 +168,7 @@ class OpenFE:
             tmp_save_path='./openfe_tmp_data_xx.feather',
             n_jobs=1,
             seed=1,
-            verbose=True,
+            verbosity="light",
             n_estimators_init_score=10000,
             n_estimators_step_2=1000,
             n_estimators_eval=100
@@ -269,8 +269,12 @@ class OpenFE:
         seed: int, optional (default=1)
             Random number seed. This will seed everything.
 
-        verbose: bool, optional (default=True)
-            Whether to display information.
+        verbosity: string, optional (default='light')
+            Input string of ['full', 'less', 'light', 'none']. 
+            full: OpenFe full, LightGBM verbose=1
+            less: OpenFE full, LightGBM verbose=0
+            light: OpenFE light, LightGBM verbose=-1
+            none: OpenFE none, LightGBM verbose=-1
 
         n_estimators_init_score: int, optional (default=10000)
         n_estimators_step_2: int, optional (default=1000)
@@ -284,7 +288,9 @@ class OpenFE:
 
         assert stage2_metric in ['gain_importance', 'permutation']
         assert stage1_metric in ['predictive', 'corr', 'mi']
+        assert verbosity in ['full', 'less', 'light', 'none']
         if metric: assert metric in ['binary_logloss', 'multi_logloss', 'auc', 'rmse', 'r2']
+
         np.random.seed(seed)
         random.seed(seed)
 
@@ -302,7 +308,9 @@ class OpenFE:
         self.tmp_save_path = tmp_save_path
         self.n_jobs = n_jobs
         self.seed = seed
-        self.verbose = verbose
+        self.verbose = False if verbosity == "none" else True
+        self.verbose_params = False if verbosity == "none" or verbosity == "light" else True
+        self.verbose_lgbm = 1 if verbosity == "full" else 0 if verbosity == "less" else -1
 
         self.data_to_dataframe()
         self.task = self.get_task(task)
@@ -440,11 +448,12 @@ class OpenFE:
               
                 params = {
                   "n_estimators": n_estimators_init_score, "learning_rate": 0.1,
-                  "seed": self.seed, "n_jobs": self.n_jobs
+                  "seed": self.seed, "n_jobs": self.n_jobs,
+                  "verbose": self.verbose_lgbm
                 }
                 if self.metric != "r2":
                   params.update({ "metric": self.metric })
-                if self.verbose:
+                if self.verbose_params:
                   self.print_params(params, source="get_init_score()")
                   
                 if self.task == "regression":
@@ -474,16 +483,18 @@ class OpenFE:
                     }
                     if self.metric == "r2":
                       params_fit.update({ "eval_metric": get_r2_score })
-                    if self.verbose:
+                    if self.verbose_params:
                       self.print_params(params_fit, ['callbacks', 'eval_metric'], "get_init_score()")
                     gbm.fit(**params_fit)
 
                     if use_train:
-                        init_scores[train_index] += (gbm.predict_proba(X_train, raw_score=True) if self.task == "classification" else \
-                                                 gbm.predict(X_train)) / (skf.n_splits - 1)
+                      init_scores[train_index] += ( gbm.predict_proba(X_train, raw_score=True) if \
+                        self.task == "classification" else \
+                        gbm.predict(X_train) ) / (skf.n_splits - 1)
                     else:
-                        init_scores[val_index] = gbm.predict_proba(X_val, raw_score=True) if self.task == "classification" else \
-                            gbm.predict(X_val)
+                      init_scores[val_index] = gbm.predict_proba(X_val, raw_score=True) if \
+                        self.task == "classification" else \
+                        gbm.predict(X_val)
 
                 init_scores = pd.DataFrame(init_scores, index=data.index)
             else:
@@ -587,13 +598,14 @@ class OpenFE:
         if self.stage2_params is None:
           params = {
             "n_estimators": n_estimators_step_2, "importance_type": "gain",
-            "num_leaves": 16, "seed": 1, "n_jobs": self.n_jobs
+            "num_leaves": 16, "seed": 1, "n_jobs": self.n_jobs,
+            "verbose": self.verbose_lgbm
           }
         else:
             params = self.stage2_params
         if self.metric is not None and self.metric != "r2":
             params.update({ "metric": self.metric })
-        if self.verbose:
+        if self.verbose_params:
           self.print_params(params, source="stage2_select()")
 
         if self.task == 'classification':
@@ -609,7 +621,7 @@ class OpenFE:
         }
         if self.metric == "r2":
           params_fit.update({ "eval_metric": get_r2_score })
-        if self.verbose:
+        if self.verbose_params:
           self.print_params(params_fit, ['callbacks', 'eval_metric'], "stage2_select()")
         gbm.fit(**params_fit)
 
@@ -675,11 +687,12 @@ class OpenFE:
             if self.stage1_metric == 'predictive':
                 params = {
                   "n_estimators": n_estimators_eval, "importance_type": "gain",
-                  "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1
+                  "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1,
+                  "verbose": self.verbose_lgbm
                 }
                 if self.metric is not None and self.metric != "r2":
                     params.update({ "metric": (self.metric) })
-                if self.verbose:
+                if self.verbose_params:
                   self.print_params(params, "_evaluate()")
 
                 if self.task == 'classification':
@@ -695,7 +708,7 @@ class OpenFE:
                 }
                 if self.metric == "r2":
                   params_fit.update({ "eval_metric": get_r2_score })
-                if self.verbose:
+                if self.verbose_params:
                   self.print_params(params_fit, ['callbacks', 'eval_metric'], "_evaluate()")
                 gbm.fit(**params_fit)
 
