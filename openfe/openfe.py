@@ -413,9 +413,13 @@ class OpenFE:
             if self.feature_boosting:
                 data = self.data.copy()
                 label = self.label.copy()
-
-                params = {"n_estimators": n_estimators_init_score, "learning_rate": 0.1, "metric": self.metric,
-                          "seed": self.seed, "n_jobs": self.n_jobs}
+                params = {
+                  "n_estimators": n_estimators_init_score, "learning_rate": 0.1,
+                  "metric": self.metric, "seed": self.seed, "n_jobs": self.n_jobs
+                }
+                task = 'Classifier' if self.task == 'classification' else 'Regressor'
+                print(f"get_init_score()::LGBM{task}::{params=}")
+              
                 if self.task == "regression":
                     gbm = lgb.LGBMRegressor(**params)
                 else:
@@ -544,10 +548,14 @@ class OpenFE:
         gc.collect()
         self.myprint("Finish data processing.")
         if self.stage2_params is None:
-            params = {"n_estimators": n_estimators_step_2, "importance_type": "gain", "num_leaves": 16,
-                      "seed": 1, "n_jobs": self.n_jobs}
+          params = {
+            "n_estimators": n_estimators_step_2, "importance_type": "gain",
+            "num_leaves": 16, "seed": 1, "n_jobs": self.n_jobs
+          }
         else:
             params = self.stage2_params
+        task = 'Classifier' if self.task == 'classification' else 'Regressor'
+        print(f"stage2_select()::LGBM{task}::{params=}")
         if self.metric is not None:
             params.update({"metric": self.metric})
         if self.task == 'classification':
@@ -614,8 +622,12 @@ class OpenFE:
             train_x = pd.DataFrame(candidate_feature.data.loc[train_y.index])
             val_x = pd.DataFrame(candidate_feature.data.loc[val_y.index])
             if self.stage1_metric == 'predictive':
-                params = {"n_estimators": n_estimators_eval, "importance_type": "gain",
-                          "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1}
+                params = {
+                  "n_estimators": n_estimators_eval, "importance_type": "gain",
+                  "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1
+                }
+                task = 'Classifier' if self.task == 'classification' else 'Regressor'
+                print(f"_evaluate()::LGBM{task}::{params=}")
                 if self.metric is not None:
                     params.update({"metric": self.metric})
                 if self.task == 'classification':
