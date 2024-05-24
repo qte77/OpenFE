@@ -404,7 +404,7 @@ class OpenFE:
         else:
           return metric
 
-    def get_params(self, params, params_to_get):
+    def get_filtered_params(self, params, params_to_get):
       """Returns params:dict by params_to_get:list as dict"""
       return {k[0]:params[k[0]] for k in zip(params.keys(), params_to_get)}
 
@@ -414,7 +414,7 @@ class OpenFE:
       if params_to_print is not None and type(params_to_print) is list:
         lgbm_fun_to_print = ".fit()"
         params_print_label = "params_fit_ex_data"
-        params = self.get_params(params_fit, ['callbacks', 'eval_metric'])
+        params = self.get_filtered_params(params, ['callbacks', 'eval_metric'])
       else:
         lgbm_fun_to_print = ""
         params_print_label = "params"
