@@ -145,7 +145,8 @@ def get_r2_score(y_true, y_pred):
 class OpenFE:
     def __init__(self):
         pass
-
+    
+    #region fit
     def fit(self,
             data: pd.DataFrame,
             label: pd.DataFrame,
@@ -335,7 +336,9 @@ class OpenFE:
         os.remove(self.tmp_save_path)
         gc.collect()
         return self.new_features_list
+    #endregion fit
 
+    #region helper
     def myprint(self, s):
         if self.verbose:
             print(s)
@@ -444,6 +447,26 @@ class OpenFE:
         except Exception as e:
             raise ValueError(f"Cannot transform data and label into dataframe due to error: {e}")
 
+    def delete_same(self, candidate_features_scores, threshold=1e-20):
+        start_n = len(candidate_features_scores)
+        if candidate_features_scores:
+            pre_score = candidate_features_scores[0][1]
+        else:
+            return candidate_features_scores
+        i = 1
+        while i < len(candidate_features_scores):
+            now_score = candidate_features_scores[i][1]
+            if abs(now_score - pre_score) < threshold:
+                candidate_features_scores.pop(i)
+            else:
+                pre_score = now_score
+                i += 1
+        end_n = len(candidate_features_scores)
+        self.myprint(f"{start_n-end_n} same features have been deleted.")
+        return candidate_features_scores
+    #endregion helper
+
+    #region init
     def get_init_score(self, init_scores, n_estimators_init_score=10000, use_train=False):
         if init_scores is None:
             assert self.task in ["regression", "classification"]
@@ -524,7 +547,29 @@ class OpenFE:
             if ((init_scores[:100].values>=0)&(init_scores[:100].values<=1)).all():
                 warnings.warn("The init_scores for classification should be raw scores instead of probability."
                               " But the init_scores are between 0 and 1.")
+    
+    def get_init_metric(self, pred, label):
+        if self.metric == 'binary_logloss':
+            init_metric = log_loss(label, scipy.special.expit(pred), labels=[0, 1])
+        elif self.metric == 'multi_logloss':
+            init_metric = log_loss(label, scipy.special.softmax(pred, axis=1),
+                                   labels=list(range(pred.shape[1])))
+        elif self.metric == 'rmse':
+            init_metric = mean_squared_error(label, pred, squared=False)
+        elif self.metric == 'auc':
+            init_metric = roc_auc_score(label, scipy.special.expit(pred))
+        elif self.metric == 'r2':
+            init_metric = r2_score(label, scipy.special.expit(pred))
+        else:
+            raise NotImplementedError(
+              f"Metric {self.metric} is not supported. "
+              f"Please select metric from ['binary_logloss', 'multi_logloss'"
+              f"'rmse', 'auc', 'r2']."
+            )
+        return init_metric
+    #endregion _init
 
+    #region stages
     def stage1_select(self, n_estimators_eval=100, ratio=0.5):
         if self.is_stage1 is False:
             train_index = _subsample(self.train_index, self.n_data_blocks)[0]
@@ -643,46 +688,9 @@ class OpenFE:
                 results.append([formula_to_tree(new_features[i]), imp])
         results = sorted(results, key=lambda x: x[1], reverse=True)
         return results
+    #endregion stages
 
-
-    def get_init_metric(self, pred, label):
-        if self.metric == 'binary_logloss':
-            init_metric = log_loss(label, scipy.special.expit(pred), labels=[0, 1])
-        elif self.metric == 'multi_logloss':
-            init_metric = log_loss(label, scipy.special.softmax(pred, axis=1),
-                                   labels=list(range(pred.shape[1])))
-        elif self.metric == 'rmse':
-            init_metric = mean_squared_error(label, pred, squared=False)
-        elif self.metric == 'auc':
-            init_metric = roc_auc_score(label, scipy.special.expit(pred))
-        elif self.metric == 'r2':
-            init_metric = r2_score(label, scipy.special.expit(pred))
-        else:
-            raise NotImplementedError(
-              f"Metric {self.metric} is not supported. "
-              f"Please select metric from ['binary_logloss', 'multi_logloss'"
-              f"'rmse', 'auc', 'r2']."
-            )
-        return init_metric
-
-    def delete_same(self, candidate_features_scores, threshold=1e-20):
-        start_n = len(candidate_features_scores)
-        if candidate_features_scores:
-            pre_score = candidate_features_scores[0][1]
-        else:
-            return candidate_features_scores
-        i = 1
-        while i < len(candidate_features_scores):
-            now_score = candidate_features_scores[i][1]
-            if abs(now_score - pre_score) < threshold:
-                candidate_features_scores.pop(i)
-            else:
-                pre_score = now_score
-                i += 1
-        end_n = len(candidate_features_scores)
-        self.myprint(f"{start_n-end_n} same features have been deleted.")
-        return candidate_features_scores
-
+    #region _evaluate()
     def _evaluate(
       self, candidate_feature,
       train_y, val_y, train_init, val_init,
@@ -692,9 +700,10 @@ class OpenFE:
             train_x = pd.DataFrame(candidate_feature.data.loc[train_y.index])
             val_x = pd.DataFrame(candidate_feature.data.loc[val_y.index])
             if self.stage1_metric == 'predictive':
+                # keep "n_jobs": 1 to avoid stale/deadlock lock with _multiprocess()
                 params = {
                   "n_estimators": n_estimators_eval, "importance_type": "gain",
-                  "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": self.n_jobs,
+                  "num_leaves": 16, "seed": 1, "deterministic": True, "n_jobs": 1,
                   "verbosity": self.verbosity_lgbm
                 }
                 if self.metric is not None and self.metric != "r2":
@@ -742,7 +751,9 @@ class OpenFE:
         except:
             print(traceback.format_exc())
             exit()
+    #endregion _evaluate()
 
+    #region _calculate
     def _calculate_multiprocess(self, candidate_features, train_idx, val_idx):
         try:
             results = []
@@ -844,7 +855,9 @@ class OpenFE:
                 for r in results:
                     res.extend(r.result())
         return res
+    #endregion _calculate
 
+    #region transform
     def _trans(self, feature, n_train):
         try:
             base_features = ['openfe_index']
@@ -919,3 +932,4 @@ class OpenFE:
         self.myprint("Finish transformation.")
         os.remove(self.tmp_save_path)
         return _train, _test
+    #endregion transform
