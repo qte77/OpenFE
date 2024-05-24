@@ -309,7 +309,7 @@ class OpenFE:
         self.n_jobs = n_jobs
         self.seed = seed
         self.verbose = False if verbosity == "none" else True
-        self.verbose_params = False if verbosity == "none" else True
+        self.verbose_params = False if verbosity in ["none", "light"] else True
         self.verbosity_lgbm = 1 if verbosity == "full" else 0 if verbosity == "less" else -1
 
         self.data_to_dataframe()
