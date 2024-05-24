@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split, StratifiedKFold, KFold
 from .FeatureGenerator import *
 import random
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import traceback
 from .utils import tree_to_formula, check_xor, formula_to_tree
 from sklearn.inspection import permutation_importance
@@ -861,10 +861,6 @@ class OpenFE:
             val_init = self.init_scores.loc[val_idx]
             init_metric = self.get_init_metric(val_init, val_y)
             for candidate_feature in tqdm(candidate_features, position=0, leave=True):
-
-                # TODO: remove print stale/deadlock
-                # print(f"_calculate_and_evaluate_multiprocess()::for::cf#{i}")
-
                 candidate_feature.calculate(data_temp, is_root=True)
                 score = self._evaluate(
                   candidate_feature,
@@ -881,7 +877,8 @@ class OpenFE:
     def _calculate_and_evaluate(
         self, candidate_features, train_idx, val_idx, n_estimators_eval
     ):
-        results = []
+        futures = []
+        results = []    
         candidates_num = len(candidate_features)
         length = int(np.ceil(candidates_num / self.n_jobs / 4))
         n = int(np.ceil(candidates_num / length))
@@ -903,16 +900,11 @@ class OpenFE:
                         candidate_features[cf_slice],
                         train_idx, val_idx, n_estimators_eval
                     )
-
-                    # TODO: remove print stale/deadlock
-                    # print(f"_calculate_and_evaluate()::ProcessPoolExecutor::iter{i}::{future}")
-
                     future.add_done_callback(lambda p: progress.update())
-                    results.append(future)
-            res = []
-            for r in tqdm(results):
-                res.extend(r.result())
-        return res
+                    futures.append(future)        
+            for f in tqdm(as_completed(futures)):
+                results.extend(f.result())
+        return results
     #endregion _calculate
 
     #region transform
