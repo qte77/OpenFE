@@ -856,10 +856,10 @@ class OpenFE:
             train_init = self.init_scores.loc[train_idx]
             val_init = self.init_scores.loc[val_idx]
             init_metric = self.get_init_metric(val_init, val_y)
-            for candidate_feature in candidate_features:
+            for candidate_feature in tqdm(candidate_features):
 
                 #TODO print stale/deadlock
-                print(f"_calculate_and_evaluate_multiprocess()::for::{candidate_feature}")
+                #print(f"_calculate_and_evaluate_multiprocess()::for::{candidate_feature}")
 
                 candidate_feature.calculate(data_temp, is_root=True)
                 score = self._evaluate(
