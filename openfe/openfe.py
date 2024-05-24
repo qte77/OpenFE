@@ -358,10 +358,13 @@ class OpenFE:
     def get_index(self, train_index, val_index):
         if train_index is None or val_index is None:
             if self.task == 'classification':
-                _, _, train_y, test_y = train_test_split(self.data, self.label, stratify=self.label,
-                                                         test_size=0.2, random_state=self.seed)
+                _, _, train_y, test_y = train_test_split(
+                  self.data, self.label, stratify=self.label, test_size=0.2, random_state=self.seed
+                )
             else:
-                _, _, train_y, test_y = train_test_split(self.data, self.label, test_size=0.2, random_state=self.seed)
+                _, _, train_y, test_y = train_test_split(
+                  self.data, self.label, test_size=0.2, random_state=self.seed
+                )
             return train_y.index, test_y.index
         else:
             return train_index, val_index
@@ -412,17 +415,17 @@ class OpenFE:
         else:
           return metric
 
-    def get_filtered_params(self, params, params_to_get):
+    def get_filtered_params(self, params, params_to_get=['features', 'callbacks', 'eval_metric']):
       """Returns params:dict by params_to_get:list as dict"""
       return {k[0]:params[k[0]] for k in zip(params.keys(), params_to_get)}
 
-    def print_params(self, params, params_to_print=None, source=None):
+    def print_params(self, params, source=None, params_fit_subset=False):
       source = "" if source is None else f"{source}::"
       task = 'Classifier' if self.task == 'classification' else 'Regressor'
-      if params_to_print is not None and type(params_to_print) is list:
+      if params_fit_subset and type(params_to_print) is list:
         lgbm_fun_to_print = ".fit()"
         params_print_label = "params_fit_ex_data"
-        params = self.get_filtered_params(params, ['callbacks', 'eval_metric'])
+        params = self.get_filtered_params(params)
       else:
         lgbm_fun_to_print = ""
         params_print_label = "params"
@@ -454,7 +457,7 @@ class OpenFE:
                 if self.metric != "r2":
                   params.update({ "metric": self.metric })
                 if self.verbose_params:
-                  self.print_params(params, source="get_init_score()")
+                  self.print_params(params, "get_init_score()")
                   
                 if self.task == "regression":
                     gbm = lgb.LGBMRegressor(**params)
@@ -484,7 +487,7 @@ class OpenFE:
                     if self.metric == "r2":
                       params_fit.update({ "eval_metric": get_r2_score })
                     if self.verbose_params:
-                      self.print_params(params_fit, ['callbacks', 'eval_metric'], "get_init_score()")
+                      self.print_params(params_fit, "get_init_score()", True)
                     gbm.fit(**params_fit)
 
                     if use_train:
@@ -606,7 +609,7 @@ class OpenFE:
         if self.metric is not None and self.metric != "r2":
             params.update({ "metric": self.metric })
         if self.verbose_params:
-          self.print_params(params, source="stage2_select()")
+          self.print_params(params, "stage2_select()")
 
         if self.task == 'classification':
             gbm = lgb.LGBMClassifier(**params)
@@ -622,7 +625,7 @@ class OpenFE:
         if self.metric == "r2":
           params_fit.update({ "eval_metric": get_r2_score })
         if self.verbose_params:
-          self.print_params(params_fit, ['callbacks', 'eval_metric'], "stage2_select()")
+          self.print_params(params_fit, "stage2_select()", True)
         gbm.fit(**params_fit)
 
         results = []
@@ -709,7 +712,7 @@ class OpenFE:
                 if self.metric == "r2":
                   params_fit.update({ "eval_metric": get_r2_score })
                 if self.verbose_params:
-                  self.print_params(params_fit, ['callbacks', 'eval_metric'], "_evaluate()")
+                  self.print_params(params_fit, "_evaluate()", True)
                 gbm.fit(**params_fit)
 
                 key = list(gbm.best_score_['valid_0'].keys())[0]
