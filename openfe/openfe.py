@@ -62,7 +62,9 @@ def _enumerate(current_order_num_features, lower_order_num_features,
     return num_candidate_features, cat_candidate_features
 
 
-def get_candidate_features(numerical_features=None, categorical_features=None, ordinal_features=None, order=1):
+def get_candidate_features(
+    numerical_features=None, categorical_features=None, ordinal_features=None, order=1
+):
     ''' You can determine the list of candidate features yourself. This function returns a list of
     candidate features that can be fed into openfe.fit(candidate_features_list)
 
@@ -880,40 +882,36 @@ class OpenFE:
         self, candidate_features, train_idx, val_idx, n_estimators_eval
     ):
         results = []
-        length = int(np.ceil(len(candidate_features) / self.n_jobs / 4))
-        n = int(np.ceil(len(candidate_features) / length))
+        candidates_num = len(candidate_features)
+        length = int(np.ceil(candidates_num / self.n_jobs / 4))
+        n = int(np.ceil(candidates_num / length))
         random.shuffle(candidate_features)
         for f in candidate_features:
             f.delete()
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
             if self.verbose:
                 print(
-                    f"Starting to calculate and evaluate with"
-                    f"{self.n_jobs} processes and {n} candidate batches"
+                    f"Starting to calculate and evaluate with {self.n_jobs} processes and "
+                    f"{n} candidate batches length approx. {length} out of {candidates_num} candiates"
                 )
             with tqdm(total=n) as progress:
                 for i in range(n):
-                    if i == (n-1):
-                        future = ex.submit(
-                            self._calculate_and_evaluate_multiprocess,
-                            candidate_features[i * length:],
-                            train_idx, val_idx, n_estimators_eval
-                        )
-                    else:
-                        future = ex.submit(
-                            self._calculate_and_evaluate_multiprocess,
-                            candidate_features[i * length:(i + 1) * length],
-                            train_idx, val_idx, n_estimators_eval
-                        )
+                    cf_slice = slice(i * length, candidates_num) if i == (n-1) else \
+                        slice(i * length, (i + 1) * length)
+                    future = ex.submit(
+                        self._calculate_and_evaluate_multiprocess,
+                        candidate_features[cf_slice],
+                        train_idx, val_idx, n_estimators_eval
+                    )
 
                     # TODO: remove print stale/deadlock
                     # print(f"_calculate_and_evaluate()::ProcessPoolExecutor::iter{i}::{future}")
 
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
-                res = []
-                for r in tqdm(results):
-                    res.extend(r.result())
+            res = []
+            for r in tqdm(results):
+                res.extend(r.result())
         return res
     #endregion _calculate
 
