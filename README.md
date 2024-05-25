@@ -14,6 +14,39 @@ train_x, test_x = ofe.transform(train_x, test, features, n_jobs=n_jobs)
 score = get_score(train_x, test, train_y, test_y)
 ```
 
+## Description of data operations
+
+Feature generation methods used ordered by categorial and numerical.
+
+* All: Freq
+* Numerical: Abs, Log, Sqrt, Square, Sigmoid, Round, Residual
+* Num2Num: Add, Substract, Multiply, Divise, Max, Min
+* Cat2Num: GroupByThenMin, GroupByThenMax, GroupByThenMean, GroupByThenMedian, GroupByThenStd, GroupByThenRank
+* Cat2Cat: Combine, CombineThenFreq, GroupByThenNUnique
+* Symmetry: Add, Subsctract, Multiply, Divise, Min, Max, Combine, CombineThenFreq
+
+### Example [CombineThenFreq](https://github.com/qte77/OpenFE/blob/c99c96c544a0f620ffe8781753ca9342355bb0bd/openfe/FeatureGenerator.py#L120)
+
+```python
+elif self.name == "CombineThenFreq":
+    temp = d1.astype(str) + '_' + d2.astype(str)
+    temp[d1.isna() | d2.isna()] = np.nan
+    value_counts = temp.value_counts()
+    value_counts.loc[np.nan] = np.nan
+    new_data = temp.apply(lambda x: value_counts.loc[x])
+```
+
+### Example [GroupByThenRank](https://github.com/qte77/OpenFE/blob/c99c96c544a0f620ffe8781753ca9342355bb0bd/openfe/FeatureGenerator.py#L103)
+
+- [pandas.DataFrame.groupby](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.groupby.html)
+- [Pandas Group by: split-apply-combine](https://pandas.pydata.org/pandas-docs/stable/user_guide/groupby.html#groupby)
+- [Pandas Cookbook Grouping](https://pandas.pydata.org/pandas-docs/stable/user_guide/cookbook.html#cookbook-grouping)
+
+```python
+elif self.name == 'GroupByThenRank':
+    new_data = d1.groupby(d2).rank(ascending=True, pct=True)
+```
+
 ## Core program flow
 
 * TODO
