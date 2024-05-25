@@ -813,21 +813,16 @@ class OpenFE:
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
             with tqdm(total=n) as progress:
                 for i in range(n):
-                    if i == (n - 1):
-                        future = ex.submit(
-                            self._calculate_multiprocess,
-                            candidate_features[i * length:],
-                            train_idx, val_idx
-                        )
-                    else:
-                        future = ex.submit(
-                            self._calculate_multiprocess,
-                            candidate_features[i * length:(i + 1) * length],
-                            train_idx, val_idx
-                        )
+                    cf_slice = slice(i * length, candidates_num) if i == (n-1) else \
+                        slice(i * length, (i + 1) * length)
+                    future = ex.submit(
+                        self._calculate_multiprocess,
+                        candidate_features[cf_slice],
+                        train_idx, val_idx
+                    )
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
-                    res = []
+                res = []
                 for r in results:
                     res.extend(r.result())
         return res
@@ -894,9 +889,9 @@ class OpenFE:
                             train_idx, val_idx, n_estimators_eval
                         ).add_done_callback(lambda p: progress.update())
                     )
-        res = []
-        for r in results:
-            res.extend(r.result())
+                res = []
+                for r in results:
+                    res.extend(r.result())
         return res
     #endregion _calculate
 
