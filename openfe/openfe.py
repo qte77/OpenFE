@@ -870,7 +870,7 @@ class OpenFE:
     def _calculate_and_evaluate(
         self, candidate_features, train_idx, val_idx, n_estimators_eval
     ):
-        futures = [] 
+        results = [] 
         candidates_num = len(candidate_features)
         length = int(np.ceil(candidates_num / self.n_jobs / 4))
         n = int(np.ceil(candidates_num / length))
@@ -887,18 +887,17 @@ class OpenFE:
                 for i in range(n):
                     cf_slice = slice(i * length, candidates_num) if i == (n-1) else \
                         slice(i * length, (i + 1) * length)
-                    future = ex.submit(
-                        self._calculate_and_evaluate_multiprocess,
-                        candidate_features[cf_slice],
-                        train_idx, val_idx, n_estimators_eval
+                    results.append(
+                        ex.submit(
+                            self._calculate_and_evaluate_multiprocess,
+                            candidate_features[cf_slice],
+                            train_idx, val_idx, n_estimators_eval
+                        ).add_done_callback(lambda p: progress.update())
                     )
-                    future.add_done_callback(lambda p: progress.update())
-                    futures.append(future)
-        results = []
+        res = []
         for r in results:
-            results.extend(r.result())
-        print(results)
-        return results
+            res.extend(r.result())
+        return res
     #endregion _calculate
 
     #region transform
