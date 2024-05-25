@@ -812,9 +812,6 @@ class OpenFE:
         )
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
             with tqdm(total=n) as progress:
-                # TODO: remove print stale/deadlock
-                # print(f"_calculate()::ProcessPoolExecutor::{ex}")
-
                 for i in range(n):
                     if i == (n - 1):
                         future = ex.submit(
@@ -828,10 +825,6 @@ class OpenFE:
                             candidate_features[i * length:(i + 1) * length],
                             train_idx, val_idx
                         )
-
-                    # TODO: remove print stale/deadlock
-                    #print(f"_calculate()::ProcessPoolExecutor::{future}")
-
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
                     res = []
@@ -901,7 +894,9 @@ class OpenFE:
                     )
                     future.add_done_callback(lambda p: progress.update())
                     futures.append(future)
-        return [f.result() for f in futures]
+        res = [f.result() for f in futures]
+        print(res)
+        return res
     #endregion _calculate
 
     #region transform
