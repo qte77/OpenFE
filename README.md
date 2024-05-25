@@ -1,6 +1,6 @@
 # OpenFE: An efficient automated feature generation tool
 
-Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE)
+Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE), see also [original documentation](https://openfe-document.readthedocs.io/en/latest/).
 
 ## Simplyfied usage
 
