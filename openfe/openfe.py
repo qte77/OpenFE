@@ -808,9 +808,12 @@ class OpenFE:
         random.shuffle(candidate_features)
         # for f in candidate_features:
         #     f.delete()
-        print(
-            f"Starting to calculate {self.n_jobs} processes and {n} candidate batches"
-        )
+        if self.verbose:
+            print(
+                f"Starting to calculate with {self.n_jobs} processes"
+                f"and {n} candidate batches length approx. {length} "
+                f"out of {candidates_num} candiates"
+            )
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
             with tqdm(total=n) as progress:
                 for i in range(n):
@@ -875,8 +878,9 @@ class OpenFE:
             f.delete()
         if self.verbose:
             print(
-                f"Starting to calculate and evaluate with {self.n_jobs} processes and "
-                f"{n} candidate batches length approx. {length} out of {candidates_num} candiates"
+                f"Starting to calculate and evaluate with {self.n_jobs} "
+                f"processes and {n} candidate batches length approx. "
+                f"{length} out of {candidates_num} candiates"
             )
         with ProcessPoolExecutor(max_workers=self.n_jobs) as ex:
             with tqdm(total=n) as progress:

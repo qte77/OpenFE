@@ -2,9 +2,10 @@
 
 Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE)
 
-## Usage
+## Simplyfied usage
 
 ```python
+!pip install OpenFE@git+https://github.com/qte77/OpenFE -qq
 ofe = OpenFE()
 features = ofe.fit(data=train_x, label=train_y, train_index=index_col, **ofep)
 ofe.new_features_list
