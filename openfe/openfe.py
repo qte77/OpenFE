@@ -802,8 +802,9 @@ class OpenFE:
 
     def _calculate(self, candidate_features, train_idx, val_idx):
         results = []
-        length = int(np.ceil(len(candidate_features) / self.n_jobs / 4))
-        n = int(np.ceil(len(candidate_features) / length))
+        candidates_num = len(candidate_features)
+        length = int(np.ceil(candidates_num / self.n_jobs / 4))
+        n = int(np.ceil(candidates_num / length))
         random.shuffle(candidate_features)
         # for f in candidate_features:
         #     f.delete()
