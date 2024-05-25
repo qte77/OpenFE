@@ -894,9 +894,11 @@ class OpenFE:
                     )
                     future.add_done_callback(lambda p: progress.update())
                     futures.append(future)
-        res = [f.result() for f in futures]
-        print(res)
-        return res
+        results = []
+        for r in results:
+            results.extend(r.result())
+        print(results)
+        return results
     #endregion _calculate
 
     #region transform
