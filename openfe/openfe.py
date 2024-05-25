@@ -882,13 +882,13 @@ class OpenFE:
                 for i in range(n):
                     cf_slice = slice(i * length, candidates_num) if i == (n-1) else \
                         slice(i * length, (i + 1) * length)
-                    results.append(
-                        ex.submit(
-                            self._calculate_and_evaluate_multiprocess,
-                            candidate_features[cf_slice],
-                            train_idx, val_idx, n_estimators_eval
-                        ).add_done_callback(lambda p: progress.update())
+                    future = ex.submit(
+                        self._calculate_and_evaluate_multiprocess,
+                        candidate_features[cf_slice],
+                        train_idx, val_idx, n_estimators_eval
                     )
+                    future.add_done_callback(lambda p: progress.update())
+                    results.append(future)
                 res = []
                 for r in results:
                     res.extend(r.result())
