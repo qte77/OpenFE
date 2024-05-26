@@ -5,7 +5,7 @@ Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE), see 
 ## Simplyfied usage
 
 ```python
-!pip install OpenFE@git+https://github.com/qte77/OpenFE -qq
+pip install OpenFE@git+https://github.com/qte77/OpenFE -qq
 ofe = OpenFE()
 features = ofe.fit(data=train_x, label=train_y, train_index=index_col, **ofep)
 ofe.new_features_list
@@ -16,7 +16,7 @@ score = get_score(train_x, test, train_y, test_y)
 
 ## Description of data operations
 
-Feature generation methods used ordered by categorial and numerical.
+Feature generation methods used ordered by categorial and numerical. Creates features and uses `lightgbm.LGBMRegressor` and `lightgbm.LGBMClassifier` to rank them according to importance. 
 
 * All: Freq
 * Numerical: Abs, Log, Sqrt, Square, Sigmoid, Round, Residual
@@ -49,14 +49,21 @@ elif self.name == 'GroupByThenRank':
 
 ## Core program flow
 
-* TODO
+```
+OpenFE
+|-fit(data, label, metric)
+| |- get_init_score() -> init_metric
+| |- stage1_select() -> return_results
+| \- stage2_select() -> results
+\-transform(X_train, X_test, new_features_list) -> _train, _test
+```
 
 ## Core structure
 
 ```
 root
 |- examples
-\- openfe
+|- openfe
 |   |- __init__.py
 |   |- FeatureGenerator.py
 |   |- FeatureSelector.py
@@ -75,6 +82,7 @@ root
 
 ## TODO
 
-* Multi-process with `concurrent.futures.ProcessPoolExecutor` not working for `OPenFE._evaluate()`
-* Merge redundant methods like `OpenFE._calculate_and_evaluate()` and `OpenFE._calculate_and_evaluate_multiprocess()`
-* Try Mojo for concurrency
+[ ] Multi-process with `concurrent.futures.ProcessPoolExecutor` not working for `OPenFE._evaluate()`
+[ ] Merge redundant methods like `OpenFE._calculate_and_evaluate()` and `OpenFE._calculate_and_evaluate_multiprocess()`
+[ ] Make sure `random.shuffle()` does not intere with the transformed data, i.e. index and values are properly output
+[ ] Try Mojo for concurrency
