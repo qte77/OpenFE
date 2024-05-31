@@ -25,7 +25,7 @@ train_x, test_x = ofe.transform(train_x, test, features, n_jobs=n_jobs)
 score = get_score(train_x, test, train_y, test_y)
 ```
 
-## Description of data operations
+## Description of data operations [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
 
 Feature generation methods used ordered by categorial and numerical. Creates features and uses `lightgbm.LGBMRegressor` and `lightgbm.LGBMClassifier` to rank them according to importance. 
 
@@ -36,7 +36,7 @@ Feature generation methods used ordered by categorial and numerical. Creates fea
 * **Cat2Cat**: Combine, CombineThenFreq, GroupByThenNUnique
 * **Symmetry**: Add, Subsctract, Multiply, Divise, Min, Max, Combine, CombineThenFreq
 
-### Example GroupByThenRank
+### Example GroupByThenRank [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
 
 Usage
 
@@ -56,7 +56,7 @@ elif self.name == 'GroupByThenRank':
     new_data = d1.groupby(d2).rank(ascending=True, pct=True)
 ```
 
-### Example CombineThenFreq
+### Example CombineThenFreq [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
 
 - [pandas.DataFrame.combine](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.combine.html)
 
@@ -72,10 +72,10 @@ elif self.name == "CombineThenFreq":
     new_data = temp.apply(lambda x: value_counts.loc[x])
 ```
 
-## Core program flow
+## Core program flow [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
 
 ```
-OpenFE
+OpenFE() -> Obj
 |-fit(data, label, metric) -> new_features_list
 | |- get_init_score() -> init_metric
 | |- stage1_select() -> return_results
@@ -83,7 +83,7 @@ OpenFE
 \-transform(X_train, X_test, new_features_list) -> _train, _test
 ```
 
-## Core structure
+## Core structure [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
 
 ```
 root
@@ -98,16 +98,17 @@ root
 \- setup.py
 ```
 
-## Changed
+## Changed [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
 
 * Added `n_estimators` to `OpenFE` to communicate with `LGBM`
 * Added `sklearn.metrics.r2_score`
 * Added more verbosity levels
 * Added code folding for structure
 
-## TODO
+## TODO [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
 
 - [ ] Multi-process with `concurrent.futures.ProcessPoolExecutor` not working for `OPenFE._evaluate()`
 - [ ] Merge redundant methods like `OpenFE._calculate_and_evaluate()` and `OpenFE._calculate_and_evaluate_multiprocess()`
 - [ ] Make sure `random.shuffle()` does not intere with the transformed data, i.e. index and values are properly output
+- [ ] Add logger with `logging`
 - [ ] Try Mojo for concurrency
