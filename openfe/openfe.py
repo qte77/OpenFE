@@ -826,7 +826,10 @@ class OpenFE:
                     )
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
-        return [r.result() for r in results]
+        reslist = []
+        for r in results:
+          reslist.extend(r.result())
+        return reslist
 
     def _calculate_and_evaluate_multiprocess(
         self, candidate_features, train_idx, val_idx, n_estimators_eval
@@ -891,7 +894,10 @@ class OpenFE:
                     )
                     future.add_done_callback(lambda p: progress.update())
                     results.append(future)
-        return [r.result() for r in results]
+        reslist = []
+        for r in results:
+          reslist.extend(r.result())
+        return reslist
     #endregion _calculate
 
     #region transform
