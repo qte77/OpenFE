@@ -11,7 +11,6 @@ Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE), see 
 - [Core program flow](#core-program-flow)
 - [Core structure](#core-structure)
 - [Changed](#changed)
-- [TODO](#todo)
 
 ## Simplyfied usage
 
@@ -104,11 +103,3 @@ root
 * Added `sklearn.metrics.r2_score`
 * Added more verbosity levels
 * Added code folding for structure
-
-## TODO [↥](#openfe-an-efficient-automated-feature-generation-tool)
-
-- [ ] Multi-process with `concurrent.futures.ProcessPoolExecutor` not working for `OPenFE._evaluate()`
-- [ ] Merge redundant methods like `OpenFE._calculate_and_evaluate()` and `OpenFE._calculate_and_evaluate_multiprocess()`
-- [ ] Make sure `random.shuffle()` does not intere with the transformed data, i.e. index and values are properly output
-- [ ] Add logger with `logging`
-- [ ] Try Mojo for concurrency
