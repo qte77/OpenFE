@@ -4,7 +4,7 @@ Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE), see 
 
 ## Content
 
-- [Simplified usage](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#simplyfied-usage)
+- [Simplified usage](#simplyfied-usage)
 - [Description of data operations](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#description-of-data-operations)
     - [Example GroupByThenRank](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#example-groupbythenrank)
     - [Example CombineThenFreq](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#example-combinethenfreq)
