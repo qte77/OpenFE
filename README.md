@@ -25,7 +25,7 @@ train_x, test_x = ofe.transform(train_x, test, features, n_jobs=n_jobs)
 score = get_score(train_x, test, train_y, test_y)
 ```
 
-## Description of data operations [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
+## Description of data operations [↥](#openfe-an-efficient-automated-feature-generation-tool)
 
 Feature generation methods used ordered by categorial and numerical. Creates features and uses `lightgbm.LGBMRegressor` and `lightgbm.LGBMClassifier` to rank them according to importance. 
 
