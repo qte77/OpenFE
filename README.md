@@ -2,15 +2,25 @@
 
 Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE), see also [original documentation](https://openfe-document.readthedocs.io/en/latest/).
 
+[![CodeFactor](https://www.codefactor.io/repository/github/qte77/OpenFE/badge)](https://www.codefactor.io/repository/github/qte77/OpenFE)
+[![Ruff](https://github.com/qte77/OpenFE/actions/workflows/ruff.yml/badge.svg)](https://github.com/qte77/OpenFE/actions/workflows/ruff.yml)
+[![Links (Fail Fast)](https://github.com/qte77/OpenFE/actions/workflows/links-fail-fast.yml/badge.svg)](https://github.com/qte77/OpenFE/actions/workflows/links-fail-fast.yml)
+[![Open in Visual Studio Code](https://img.shields.io/static/v1?logo=visualstudiocode&label=&message=Open%20in%20Visual%20Studio%20Code&labelColor=2c2c32&color=007acc&logoColor=007acc)](https://open.vscode.dev/qte77/OpenFE)
+
+<!--
+[![Cirrus CI - Base Branch Build Status](https://img.shields.io/cirrus/github/qte77/OpenFE?logo=Cirrus-ci)](https://cirrus-ci.com/github/gte77/OpenFE)
+[![wakatime](https://wakatime.com/badge/github/qte77/OpenFE.svg)](https://wakatime.com/badge/github/qte77/OpenFE)
+-->
+
 ## Content
 
 - [Simplified usage](#simplyfied-usage)
 - [Description of data operations](#description-of-data-operations)
-    - [Example GroupByThenRank](#example-groupbythenrank)
-    - [Example CombineThenFreq](#example-combinethenfreq)
-- [Core program flow](#core-program-flow)
-- [Core structure](#core-structure)
-- [Changed](#changed)
+    - [Example GroupByThenRank](#example-groupbythenrank-[↥])
+    - [Example CombineThenFreq](#example-combinethenfreq-[↥])
+- [Core program flow](#core-program-flow-[↥])
+- [Core structure](#core-structure-[↥])
+- [Changed](#changed-[↥])
 
 ## Simplyfied usage
 
