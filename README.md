@@ -5,13 +5,13 @@ Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE), see 
 ## Content
 
 - [Simplified usage](#simplyfied-usage)
-- [Description of data operations](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#description-of-data-operations)
-    - [Example GroupByThenRank](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#example-groupbythenrank)
-    - [Example CombineThenFreq](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#example-combinethenfreq)
-- [Core program flow](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#core-program-flow)
-- [Core structure](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#core-structure)
-- [Changed](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#changed)
-- [TODO](https://github.com/qte77/OpenFE/tree/master?tab=readme-ov-file#todo)
+- [Description of data operations](#description-of-data-operations)
+    - [Example GroupByThenRank](#example-groupbythenrank)
+    - [Example CombineThenFreq](#example-combinethenfreq)
+- [Core program flow](#core-program-flow)
+- [Core structure](#core-structure)
+- [Changed](#changed)
+- [TODO](#todo)
 
 ## Simplyfied usage
 
@@ -36,7 +36,7 @@ Feature generation methods used ordered by categorial and numerical. Creates fea
 * **Cat2Cat**: Combine, CombineThenFreq, GroupByThenNUnique
 * **Symmetry**: Add, Subsctract, Multiply, Divise, Min, Max, Combine, CombineThenFreq
 
-### Example GroupByThenRank [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
+### Example GroupByThenRank [↥](#openfe-an-efficient-automated-feature-generation-tool)
 
 Usage
 
@@ -56,7 +56,7 @@ elif self.name == 'GroupByThenRank':
     new_data = d1.groupby(d2).rank(ascending=True, pct=True)
 ```
 
-### Example CombineThenFreq [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
+### Example CombineThenFreq [↥](#openfe-an-efficient-automated-feature-generation-tool)
 
 - [pandas.DataFrame.combine](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.combine.html)
 
@@ -72,7 +72,7 @@ elif self.name == "CombineThenFreq":
     new_data = temp.apply(lambda x: value_counts.loc[x])
 ```
 
-## Core program flow [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
+## Core program flow [↥](#openfe-an-efficient-automated-feature-generation-tool)
 
 ```
 OpenFE() -> Obj
@@ -83,7 +83,7 @@ OpenFE() -> Obj
 \-transform(X_train, X_test, new_features_list) -> _train, _test
 ```
 
-## Core structure [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
+## Core structure [↥](#openfe-an-efficient-automated-feature-generation-tool)
 
 ```
 root
@@ -98,14 +98,14 @@ root
 \- setup.py
 ```
 
-## Changed [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
+## Changed [↥](#openfe-an-efficient-automated-feature-generation-tool)
 
 * Added `n_estimators` to `OpenFE` to communicate with `LGBM`
 * Added `sklearn.metrics.r2_score`
 * Added more verbosity levels
 * Added code folding for structure
 
-## TODO [↥](https://github.com/qte77/OpenFE?tab=readme-ov-file#openfe-an-efficient-automated-feature-generation-tool)
+## TODO [↥](#openfe-an-efficient-automated-feature-generation-tool)
 
 - [ ] Multi-process with `concurrent.futures.ProcessPoolExecutor` not working for `OPenFE._evaluate()`
 - [ ] Merge redundant methods like `OpenFE._calculate_and_evaluate()` and `OpenFE._calculate_and_evaluate_multiprocess()`
