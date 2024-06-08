@@ -16,11 +16,11 @@ Forked from [IIS-Li-Group/OpenFE](https://github.com/IIIS-Li-Group/OpenFE), see 
 
 - [Simplified usage](#simplyfied-usage)
 - [Description of data operations](#description-of-data-operations)
-    - [Example GroupByThenRank](#example-groupbythenrank-[↥])
-    - [Example CombineThenFreq](#example-combinethenfreq-[↥])
-- [Core program flow](#core-program-flow-[↥])
-- [Core structure](#core-structure-[↥])
-- [Changed](#changed-[↥])
+    - [Example GroupByThenRank](#example-groupbythenrank-)
+    - [Example CombineThenFreq](#example-combinethenfreq-)
+- [Core program flow](#core-program-flow-)
+- [Core structure](#core-structure-)
+- [Changed](#changed-)
 
 ## Simplyfied usage
 
